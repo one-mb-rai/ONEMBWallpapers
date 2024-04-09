@@ -5,7 +5,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.util.Log
+import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -32,6 +34,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 import kotlin.random.Random
 
 class WallpaperViewModel : ViewModel() {
@@ -111,6 +117,24 @@ class WallpaperViewModel : ViewModel() {
                 imageLoader.execute(request).drawable?.toBitmap() ?: throw IOException("Bitmap is null")
             } catch (e: Exception) {
                 throw IOException("Error loading bitmap: ${e.message}")
+            }
+        }
+    }
+
+    suspend fun saveBitmapAndGetUri(bitmap: Bitmap, context: Context): Uri? {
+        return withContext(Dispatchers.IO) {
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "IMG_$timestamp.jpg"
+            val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val file = File(dir, fileName)
+            try {
+                FileOutputStream(file).use { fos ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+                }
+                Uri.fromFile(file)
+            } catch (e: IOException) {
+                Log.e("WallpaperViewModel", "Error saving bitmap: ${e.message}")
+                null
             }
         }
     }
