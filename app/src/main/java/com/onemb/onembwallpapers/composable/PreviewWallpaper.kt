@@ -1,5 +1,6 @@
 package com.onemb.onembwallpapers.composable
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.util.Log
 import android.view.MotionEvent
@@ -44,6 +45,7 @@ import androidx.navigation.NavController
 import com.onemb.onembwallpapers.utils.ScreenUtils.getScreenHeight
 import com.onemb.onembwallpapers.utils.ScreenUtils.getScreenWidth
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
+import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 
 
@@ -54,8 +56,6 @@ fun WallpaperPreview(
     navController: NavController
 ) {
     val context = LocalContext.current
-    var croppedBitmap: Bitmap? by remember { mutableStateOf(null) }
-
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -66,17 +66,27 @@ fun WallpaperPreview(
                 .fillMaxSize()
                 .verticalScroll(state)
         ) {
-            CropImage(
-                bitmap = bitmap,
-                onCropCompleted = { croppedBitmap = it },
+
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentScale = ContentScale.FillBounds,
+                contentDescription = null
             )
             Button(
                 onClick = {
-                        viewModel.viewModelScope.launch {
-                            viewModel.setWallpaper(viewModel.getWallpaperBitmap()!!, context)
-                        }
-                        viewModel.setWallpapersBitmapLoaded(false)
-                        navController.popBackStack()
+                    viewModel.viewModelScope.launch {
+//                        val sourceUri = viewModel.getWallpaperBitmap()
+//                            ?.let { viewModel.saveBitmapAndGetUri(it, context) }!!
+//                        val destinationUri =
+//                        UCrop.of(sourceUri, destinationUri)
+//                            .withAspectRatio(16F, 9F)
+//                            .withMaxResultSize(getScreenWidth(context), getScreenHeight(context))
+//                            .start(context as Activity);
+                    }
+//                            viewModel.setWallpaper(viewModel.getWallpaperBitmap()!!, context)
+//                        }
+//                        viewModel.setWallpapersBitmapLoaded(false)
+//                        navController.popBackStack()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -86,58 +96,5 @@ fun WallpaperPreview(
                 Text(text = "Set Wallpaper")
             }
         }
-    }
-}
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-fun CropImage(
-    bitmap: Bitmap,
-    onCropCompleted: (Bitmap) -> Unit
-) {
-    var imageScale by remember { mutableStateOf(1f) }
-    var imageOffset by remember { mutableStateOf(IntOffset.Zero) }
-    var imageSize by remember { mutableStateOf(Size.Zero) }
-    val density = LocalDensity.current.density
-    val context = LocalContext.current
-    Box(
-        Modifier.fillMaxSize()
-            .pointerInteropFilter { event ->
-                if (event.action == MotionEvent.ACTION_UP) {
-                    // Calculate the crop region based on the visible portion of the image
-                    val left = (-imageOffset.x / imageScale).coerceAtLeast(0f)
-                    val top = (-imageOffset.y / imageScale).coerceAtLeast(0f)
-                    val right = ((-imageOffset.x + (getScreenWidth(context) / density)) / imageScale).coerceAtMost(imageSize.width)
-                    val bottom = ((-imageOffset.y + (getScreenHeight(context) / density)) / imageScale).coerceAtMost(imageSize.height)
-
-                    // Create a cropped bitmap
-                    val croppedBitmap = Bitmap.createBitmap(bitmap, left.toInt(), top.toInt(), (right - left).toInt(), (bottom - top).toInt())
-
-                    // Invoke the callback with the cropped bitmap
-                    onCropCompleted(croppedBitmap)
-                }
-                true
-            }
-            .onGloballyPositioned { coordinates ->
-                imageSize = coordinates.size.toSize()
-            }
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-                layout(placeable.width, placeable.height) {
-                    placeable.place(0, 0)
-                }
-            }
-    ) {
-        Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentScale = ContentScale.FillBounds,
-            contentDescription = null,
-            modifier = Modifier
-                .graphicsLayer(
-                    scaleX = imageScale,
-                    scaleY = imageScale,
-                    translationX = imageOffset.x.toFloat(),
-                    translationY = imageOffset.y.toFloat()
-                )
-        )
     }
 }

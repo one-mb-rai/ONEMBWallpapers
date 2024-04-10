@@ -1,17 +1,35 @@
 package com.onemb.onembwallpapers.composable
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedAssistChip
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -19,9 +37,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +57,9 @@ import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewModel) {
+    val collectionsState = viewModel.collections.observeAsState()
+    var selectedCollection by remember { mutableStateOf(emptyList<String>()) }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -53,52 +77,64 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
                 }
             )
         },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    viewModel.saveSelectedCollection(context, selectedCollection)
+                    viewModel.getWallpapers(context)
+                    navController.navigate("Home")
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Done,
+                    contentDescription = "Done icon",
+                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                )
+            }
+        }
     ) { innerPadding ->
-        val context = LocalContext.current
-        val wallpapersState = viewModel.wallpapers.observeAsState()
-        val bitmapLoaded = viewModel.wallpapersBitmapLoaded.observeAsState()
-        val arrayIndex = remember {
-            mutableIntStateOf(0)
-        }
-        LaunchedEffect(true) {
-            viewModel.getWallpapers()
-        }
 
-        when {
-            bitmapLoaded.value == true -> {
-                viewModel.setWallpapersBitmapLoaded(false)
-                navController.navigate("preview")
+        LaunchedEffect (null){
+            if(viewModel.getSelectedCollection(context).isNotEmpty()) {
+                selectedCollection = viewModel.getSelectedCollection(context)
             }
         }
 
-        LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.padding(innerPadding)) {
-            wallpapersState.value?.photos?.let { wallpapers ->
-                itemsIndexed(wallpapers) { index, _ ->
-                    Box(
+        LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.padding(innerPadding)) {
+            collectionsState.value?.collections?.let { item ->
+                itemsIndexed(item) { index, _ ->
+                    Row(
                         modifier = Modifier
-                            .padding(3.dp).fillMaxSize().height(200.dp)
-                            .clickable {
-                                arrayIndex.intValue = index
-                                wallpapersState.value?.photos?.get(index)?.src?.original?.let {
-                                    viewModel.setWallpaperFromUrl(
-                                        it,
-                                        context
+                            .padding(2.dp).height(50.dp)
+                    ) {
+                        ElevatedFilterChip(
+                            modifier = Modifier.fillMaxSize(),
+                            onClick = {
+                                selectedCollection = if (selectedCollection.contains(collectionsState.value?.collections!![index].title)) {
+                                    selectedCollection - collectionsState.value?.collections!![index].title
+                                } else {
+                                    selectedCollection + collectionsState.value?.collections!![index].title
+                                }
+                                Log.d("DATA", selectedCollection.joinToString(", "))
+                            },
+                            label = {
+                                Text(
+                                    collectionsState.value?.collections!![index].title,
+                                )
+                             },
+                            selected = selectedCollection.contains(collectionsState.value?.collections!![index].title),
+                            leadingIcon = if(selectedCollection.contains(collectionsState.value?.collections!![index].title)) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Filled.Done,
+                                        contentDescription = "Done icon",
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
                                     )
                                 }
-                            }
-                    ) {
-                        ElevatedCard(
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 6.dp
-                            ),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            AsyncImage(
-                                model = wallpapersState.value?.photos?.get(index)?.src?.large,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                            } else {
+                                    null
+                                }
+                        )
                     }
                 }
             }

@@ -39,24 +39,33 @@ data class Src(
     val tiny: String
 )
 
-data class GalleryResponse(
+data class CollectionResponse(
+    val collections: List<Collection>,
+    val page: Int,
+    val per_page: Int,
+    val total_results: Int,
+    val next_page: String,
+    val prev_page: String
+)
+
+data class Collection(
     val id: String,
     val title: String,
-    val description: String,
-    val isPrivate: Boolean,
-    val mediaCount: Int,
-    val photosCount: Int,
-    val videosCount: Int
+    val description: String?,
+    val private: Boolean,
+    val media_count: Int,
+    val photos_count: Int,
+    val videos_count: Int
 )
 
 
 interface PixelsWallpaperService {
 
     @Headers("Authorization: 3cJI1Y0uEHUzCw7XroIGhEloabxbIYF7YLRBOMPsaZH0SPJFVHQZSOHL")
-    @GET("v1/curated?per_page=80")
-    fun getWallpapers(@Query("page") page: Int): Call<WallpaperResponse>
+    @GET("v1/search?per_page=80")
+    fun getWallpapers(@Query("page") page: Int, @Query("query") query: String): Call<WallpaperResponse>
 
     @Headers("Authorization: 3cJI1Y0uEHUzCw7XroIGhEloabxbIYF7YLRBOMPsaZH0SPJFVHQZSOHL")
-    @GET("v1/curated?per_page=50")
-    fun getCollections(): Call<GalleryResponse>
+    @GET("v1/collections/featured?per_page=50")
+    fun getCollections(): Call<CollectionResponse>
 }

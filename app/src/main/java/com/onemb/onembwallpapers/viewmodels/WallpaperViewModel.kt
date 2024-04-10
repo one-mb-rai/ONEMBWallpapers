@@ -2,34 +2,27 @@ package com.onemb.onembwallpapers.viewmodels
 
 import android.app.WallpaperManager
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.util.Log
-import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import coil.ImageLoader
-import coil.disk.DiskCache
-import coil.memory.MemoryCache
 import coil.request.ImageRequest
+import com.onemb.onembwallpapers.services.CollectionResponse
 import com.onemb.onembwallpapers.services.PixelsWallpaperService
 import com.onemb.onembwallpapers.services.WallpaperResponse
-import com.onemb.onembwallpapers.utils.ScreenUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
-import retrofit2.HttpException
 import retrofit2.Response
 import retrofit2.Retrofit
-import retrofit2.awaitResponse
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.FileOutputStream
@@ -37,7 +30,6 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 import kotlin.random.Random
 
 class WallpaperViewModel : ViewModel() {
@@ -50,29 +42,70 @@ class WallpaperViewModel : ViewModel() {
     private val _wallpapers = MutableLiveData<WallpaperResponse?>()
     val wallpapers: MutableLiveData<WallpaperResponse?> = _wallpapers
 
+    private val _collections = MutableLiveData<CollectionResponse?>()
+    val collections: MutableLiveData<CollectionResponse?> = _collections
+
     private val _wallpapersBitmapLoaded = MutableLiveData(false)
     val wallpapersBitmapLoaded: MutableLiveData<Boolean> = _wallpapersBitmapLoaded
 
     private var wallpaperBitmap: Bitmap? = null
 
     init {
-        getWallpapers()
+        getWallpapersCategories()
     }
 
+    fun getSharedPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences("ONEMBCollectionPreferences", Context.MODE_PRIVATE)
+    }
+
+    // Function to save selectedCollection to SharedPreferences
+    fun saveSelectedCollection(context: Context, selectedCollection: List<String>) {
+        val sharedPreferences = getSharedPreferences(context)
+        val editor = sharedPreferences.edit()
+        editor.putStringSet("ONEMBCollection", selectedCollection.toSet())
+        editor.apply()
+    }
+
+    // Function to retrieve selectedCollection from SharedPreferences
+    fun getSelectedCollection(context: Context): List<String> {
+        val sharedPreferences = getSharedPreferences(context)
+        val selectedCollectionSet = sharedPreferences.getStringSet("ONEMBCollection", emptySet())
+        return selectedCollectionSet?.toList() ?: emptyList()
+    }
 
     private fun getRandomNumber(): Int {
         return Random.nextInt(1, 100)
     }
 
-    fun getWallpapers() {
-        val call: Call<WallpaperResponse> = service.getWallpapers(getRandomNumber())
+    fun getWallpapersCategories() {
+        val call: Call<CollectionResponse> = service.getCollections()
+
+        call.enqueue(object : Callback<CollectionResponse> {
+            override fun onResponse(call: Call<CollectionResponse>, response: Response<CollectionResponse>) {
+                if (response.isSuccessful) {
+                    val collections: CollectionResponse? = response.body()
+                    _collections.value = collections
+                    Log.d("Response", response.body().toString())
+                } else {
+                    Log.d("HTTP Error", "Failed to fetch collections: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(p0: Call<CollectionResponse>, p1: Throwable) {
+                Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
+            }
+        })
+    }
+
+    fun getWallpapers(context: Context) {
+        val call: Call<WallpaperResponse> = service.getWallpapers(getRandomNumber(), getSelectedCollection(context).joinToString(", "))
 
         call.enqueue(object : Callback<WallpaperResponse> {
             override fun onResponse(call: Call<WallpaperResponse>, response: Response<WallpaperResponse>) {
                 if (response.isSuccessful) {
                     val wallpapers: WallpaperResponse? = response.body()
                     _wallpapers.value = wallpapers
-                    Log.d("Response", wallpapers?.photos?.size.toString())
+                    Log.d("Response", wallpapers?.photos?.toString()!!)
                 } else {
                     Log.d("HTTP Error", "Failed to fetch wallpapers: ${response.code()}")
                 }
@@ -121,12 +154,14 @@ class WallpaperViewModel : ViewModel() {
         }
     }
 
-    suspend fun saveBitmapAndGetUri(bitmap: Bitmap, context: Context): Uri? {
+    suspend fun saveBitmapAndGetUri(bitmap: Bitmap, context: Context, fileName: String): Uri? {
         return withContext(Dispatchers.IO) {
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val fileName = "IMG_$timestamp.jpg"
-            val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            val file = File(dir, fileName)
+            val folder = File(Environment.getExternalStorageDirectory(), "ONEMBWallpapers")
+            if (!folder.exists()) {
+                folder.mkdirs()
+            }
+
+            val file = File(folder, fileName)
             try {
                 FileOutputStream(file).use { fos ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)

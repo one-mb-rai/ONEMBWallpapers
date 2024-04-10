@@ -118,34 +118,34 @@ class WallpaperChangeForegroundService : Service() {
                 if(wallpaperResponse != null) {
                     startWallpaperSetProcess(wallpaperResponse!!, context)
                 } else {
-                    val call: Call<WallpaperResponse> =
-                        service.getWallpapers(Random.nextInt(1, 100))
-                    call.enqueue(object : Callback<WallpaperResponse> {
-                        override fun onResponse(
-                            call: Call<WallpaperResponse>,
-                            response: Response<WallpaperResponse>
-                        ) {
-                            if (response.isSuccessful) {
-                                val wallpapers: WallpaperResponse? = response.body()
-                                if (wallpapers != null) {
-                                    wallpaperResponse = wallpapers
-                                }
-                                if (wallpapers != null) {
-                                    startWallpaperSetProcess(wallpapers, context)
-                                }
-                                Log.d("Response", wallpapers?.photos?.size.toString())
-                            } else {
-                                Log.d(
-                                    "HTTP Error",
-                                    "Failed to fetch wallpapers: ${response.code()}"
-                                )
-                            }
-                        }
-
-                        override fun onFailure(p0: Call<WallpaperResponse>, p1: Throwable) {
-                            Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
-                        }
-                    })
+//                    val call: Call<WallpaperResponse> =
+//                        service.getWallpapers(Random.nextInt(1, 100))
+//                    call.enqueue(object : Callback<WallpaperResponse> {
+//                        override fun onResponse(
+//                            call: Call<WallpaperResponse>,
+//                            response: Response<WallpaperResponse>
+//                        ) {
+//                            if (response.isSuccessful) {
+//                                val wallpapers: WallpaperResponse? = response.body()
+//                                if (wallpapers != null) {
+//                                    wallpaperResponse = wallpapers
+//                                }
+//                                if (wallpapers != null) {
+//                                    startWallpaperSetProcess(wallpapers, context)
+//                                }
+//                                Log.d("Response", wallpapers?.photos?.size.toString())
+//                            } else {
+//                                Log.d(
+//                                    "HTTP Error",
+//                                    "Failed to fetch wallpapers: ${response.code()}"
+//                                )
+//                            }
+//                        }
+//
+//                        override fun onFailure(p0: Call<WallpaperResponse>, p1: Throwable) {
+//                            Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
+//                        }
+//                    })
                 }
 
                 // Sleep for a specified interval

@@ -80,5 +80,5 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("androidx.navigation:navigation-compose:2.7.7")
     //noinspection UseTomlInstead
-
+    implementation("com.github.yalantis:ucrop:2.2.8-native")
 }

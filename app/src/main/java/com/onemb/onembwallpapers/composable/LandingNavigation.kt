@@ -27,8 +27,12 @@ fun LandingNavigation() {
     val viewModel: WallpaperViewModel = viewModel()
     val context = LocalContext.current
     val bitmapLoaded = viewModel.wallpapersBitmapLoaded.observeAsState()
-
-    NavHost(navController = navController, startDestination = "Home") {
+    val isCategoriesSelected = viewModel.getSelectedCollection(context).isNotEmpty()
+    if(isCategoriesSelected) {
+        viewModel.getWallpapers(context)
+    }
+    NavHost(navController = navController, startDestination = if(isCategoriesSelected) "Home" else "Categories") {
+        composable("Categories") { WallpaperCategory(navController, viewModel)}
         composable("Home") { WallpaperApp(navController, viewModel) }
         composable("Preview") {
             if(bitmapLoaded.value == false) {
