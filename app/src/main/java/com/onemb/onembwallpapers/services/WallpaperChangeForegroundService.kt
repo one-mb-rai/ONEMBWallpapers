@@ -7,6 +7,7 @@ import android.app.Service
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.IBinder
@@ -112,40 +113,47 @@ class WallpaperChangeForegroundService : Service() {
         isServiceRunning = true
     }
 
+    fun getSharedPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences("ONEMBCollectionPreferences", Context.MODE_PRIVATE)
+    }
+
     private fun startFunction(context: Context) {
         Thread {
             while (isServiceRunning) {
                 if(wallpaperResponse != null) {
                     startWallpaperSetProcess(wallpaperResponse!!, context)
                 } else {
-//                    val call: Call<WallpaperResponse> =
-//                        service.getWallpapers(Random.nextInt(1, 100))
-//                    call.enqueue(object : Callback<WallpaperResponse> {
-//                        override fun onResponse(
-//                            call: Call<WallpaperResponse>,
-//                            response: Response<WallpaperResponse>
-//                        ) {
-//                            if (response.isSuccessful) {
-//                                val wallpapers: WallpaperResponse? = response.body()
-//                                if (wallpapers != null) {
-//                                    wallpaperResponse = wallpapers
-//                                }
-//                                if (wallpapers != null) {
-//                                    startWallpaperSetProcess(wallpapers, context)
-//                                }
-//                                Log.d("Response", wallpapers?.photos?.size.toString())
-//                            } else {
-//                                Log.d(
-//                                    "HTTP Error",
-//                                    "Failed to fetch wallpapers: ${response.code()}"
-//                                )
-//                            }
-//                        }
-//
-//                        override fun onFailure(p0: Call<WallpaperResponse>, p1: Throwable) {
-//                            Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
-//                        }
-//                    })
+                    val sharedPreferences = getSharedPreferences(context)
+                    val selectedCollectionSet = sharedPreferences.getStringSet("ONEMBCollection", emptySet())
+
+                    val call: Call<WallpaperResponse> =
+                        service.getWallpapers(Random.nextInt(1, 100), (selectedCollectionSet?.toList() ?: emptyList()).joinToString(", "))
+                    call.enqueue(object : Callback<WallpaperResponse> {
+                        override fun onResponse(
+                            call: Call<WallpaperResponse>,
+                            response: Response<WallpaperResponse>
+                        ) {
+                            if (response.isSuccessful) {
+                                val wallpapers: WallpaperResponse? = response.body()
+                                if (wallpapers != null) {
+                                    wallpaperResponse = wallpapers
+                                }
+                                if (wallpapers != null) {
+                                    startWallpaperSetProcess(wallpapers, context)
+                                }
+                                Log.d("Response", wallpapers?.photos?.size.toString())
+                            } else {
+                                Log.d(
+                                    "HTTP Error",
+                                    "Failed to fetch wallpapers: ${response.code()}"
+                                )
+                            }
+                        }
+
+                        override fun onFailure(p0: Call<WallpaperResponse>, p1: Throwable) {
+                            Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
+                        }
+                    })
                 }
 
                 // Sleep for a specified interval
