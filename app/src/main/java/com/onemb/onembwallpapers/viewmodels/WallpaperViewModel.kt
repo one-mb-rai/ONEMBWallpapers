@@ -14,19 +14,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
-import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.CollectionResponse
-import com.onemb.onembwallpapers.services.JSONResponse
 import com.onemb.onembwallpapers.services.PixelsWallpaperService
-import com.onemb.onembwallpapers.services.WallpaperResponse
+import com.onemb.onembwallpapers.services.Wallpaper
+import com.onemb.onembwallpapers.services.Wallpapers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONException
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
@@ -43,11 +39,14 @@ class WallpaperViewModel : ViewModel() {
                              build();
     private var service = retrofit.create(PixelsWallpaperService::class.java)
 
-    private val _wallpapers = MutableLiveData<List<JSONResponse>>()
-    val wallpapers: MutableLiveData<List<JSONResponse>> = _wallpapers
+    private val _wallpapers = MutableLiveData<List<Wallpapers>>()
+    val wallpapers: MutableLiveData<List<Wallpapers>> = _wallpapers
 
     private val _wallpapersBitmapLoaded = MutableLiveData(false)
     val wallpapersBitmapLoaded: MutableLiveData<Boolean> = _wallpapersBitmapLoaded
+
+    private val _collections = MutableLiveData<CollectionResponse?>()
+    val collections: MutableLiveData<CollectionResponse?> = _collections
 
     private var wallpaperBitmap: Bitmap? = null
 
@@ -55,35 +54,50 @@ class WallpaperViewModel : ViewModel() {
 //        getWallpapersCategories()
     }
 
+
     fun loadLocalJson(context: Context) {
         try {
-            val inputStream: InputStream = context.getAssets().open("fileList.json")
+            val inputStream: InputStream = context.assets.open("fileList.json")
             val size = inputStream.available()
             val buffer = ByteArray(size)
             inputStream.read(buffer)
             inputStream.close()
             val json = String(buffer, charset("UTF-8"))
-            val fileList = mutableListOf<JSONResponse>()
 
             // Parse the JSON string
-            val jsonArray = JSONArray(json)
-            Log.d("ARRAY", jsonArray.toString())
-            for (i in 0 until jsonArray.length()) {
-                val jsonObject = jsonArray.getJSONObject(i)
+            val jsonObject = JSONObject(json)
+            val wallpapersObject = jsonObject.getJSONObject("wallpapers")
+            val fileList = mutableListOf<Wallpapers>()
 
-                val fileName = jsonObject.getString("name")
-                val fileUrl = jsonObject.getString("url")
-                val jsonResponse = JSONResponse(fileName, fileUrl)
-                fileList.add(jsonResponse)
+            // Iterate through each folder
+            val keys = wallpapersObject.keys()
+            while (keys.hasNext()) {
+                val folderName = keys.next()
+                val jsonArray = wallpapersObject.getJSONArray(folderName)
+
+                // Iterate through wallpapers in the folder
+                val wallpapersList = mutableListOf<Wallpaper>()
+                for (i in 0 until jsonArray.length()) {
+                    val wallpaperObject = jsonArray.getJSONObject(i)
+                    val fileName = wallpaperObject.getString("name")
+                    val fileUrl = wallpaperObject.getString("url")
+                    val wallpaper = Wallpaper(fileName, fileUrl)
+                    wallpapersList.add(wallpaper)
+                }
+
+                // Add wallpapers list to the result
+                fileList.add(Wallpapers(mapOf(folderName to wallpapersList)))
             }
+
+            // Set the result to LiveData or do whatever you need to do with it
             _wallpapers.value = fileList
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: JSONException) {
             e.printStackTrace()
         }
-
     }
+
 
     fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("ONEMBCollectionPreferences", Context.MODE_PRIVATE)

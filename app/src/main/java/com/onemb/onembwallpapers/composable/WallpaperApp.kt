@@ -2,6 +2,7 @@ package com.onemb.onembwallpapers.composable
 
 import android.app.Application
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -75,6 +76,8 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
         }
     ) { innerPadding ->
         val wallpapersState = viewModel.wallpapers.observeAsState()
+
+        Log.d("Wallpapersda", wallpapersState.value?.get(0)?.wallpapers?.get("32k_wallpaper").toString())
         val arrayIndex = remember {
             mutableIntStateOf(0)
         }
@@ -85,7 +88,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
 
 
         LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.padding(innerPadding)) {
-            wallpapersState.value
+            wallpapersState.value?.get(0)?.wallpapers?.get("32k_wallpaper")
                 ?.let { wallpapers ->
                 itemsIndexed(wallpapers) { index, _ ->
                     if(index == 0) {
@@ -133,13 +136,12 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                 .height(200.dp)
                                 .clickable {
                                     arrayIndex.intValue = index
-
-                                    wallpapersState.value?.get(index)?.url?.let {
-                                        viewModel.setWallpaperFromUrl(
-                                            it,
-                                            context
-                                        )
-                                    }
+                                    wallpapersState.value?.get(0)?.wallpapers?.get("32k_wallpaper")!![index].url.let {
+                                            viewModel.setWallpaperFromUrl(
+                                                it,
+                                                context
+                                            )
+                                        }
                                     navController.navigate("Preview")
                                 }
                         ) {
@@ -150,7 +152,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 AsyncImage(
-                                    model = wallpapersState.value?.get(index)?.url,
+                                    model = wallpapersState.value?.get(0)?.wallpapers?.get("32k_wallpaper")!![index].url,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop
                                 )
