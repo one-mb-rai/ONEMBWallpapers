@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 
 
@@ -80,7 +81,7 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.saveSelectedCollection(context, selectedCollection)
+                    viewModel.saveSelectedCollection(context, selectedCollection, context.getString(R.string.app_collection_key))
                     viewModel.getWallpapers(context)
                     navController.navigate("Home")
                 },
@@ -95,8 +96,8 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
     ) { innerPadding ->
 
         LaunchedEffect (null){
-            if(viewModel.getSelectedCollection(context).isNotEmpty()) {
-                selectedCollection = viewModel.getSelectedCollection(context)
+            if(viewModel.getSelectedCollection(context, context.getString(R.string.app_collection_key)).isNotEmpty()) {
+                selectedCollection = viewModel.getSelectedCollection(context, context.getString(R.string.app_collection_key))
             }
         }
 

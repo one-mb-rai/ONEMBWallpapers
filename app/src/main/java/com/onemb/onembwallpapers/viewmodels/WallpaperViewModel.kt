@@ -1,5 +1,6 @@
 package com.onemb.onembwallpapers.viewmodels
 
+import android.annotation.SuppressLint
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.SharedPreferences
@@ -13,6 +14,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
+import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.CollectionResponse
 import com.onemb.onembwallpapers.services.PixelsWallpaperService
 import com.onemb.onembwallpapers.services.WallpaperResponse
@@ -59,18 +61,24 @@ class WallpaperViewModel : ViewModel() {
     }
 
     // Function to save selectedCollection to SharedPreferences
-    fun saveSelectedCollection(context: Context, selectedCollection: List<String>) {
+    fun saveSelectedCollection(context: Context, selectedCollection: List<String>, listName: String) {
         val sharedPreferences = getSharedPreferences(context)
         val editor = sharedPreferences.edit()
-        editor.putStringSet("ONEMBCollection", selectedCollection.toSet())
+        editor.putStringSet(listName, selectedCollection.toSet())
         editor.apply()
     }
 
     // Function to retrieve selectedCollection from SharedPreferences
-    fun getSelectedCollection(context: Context): List<String> {
+    fun getSelectedCollection(context: Context, listName: String): List<String> {
         val sharedPreferences = getSharedPreferences(context)
-        val selectedCollectionSet = sharedPreferences.getStringSet("ONEMBCollection", emptySet())
+        val selectedCollectionSet = sharedPreferences.getStringSet(listName, emptySet())
         return selectedCollectionSet?.toList() ?: emptyList()
+    }
+
+    @SuppressLint("CommitPrefEdits")
+    fun removeSelectedCollection(context: Context, listName: String) {
+        val sharedPreferences = getSharedPreferences(context)
+        sharedPreferences.edit().remove(listName)
     }
 
     private fun getRandomNumber(): Int {
@@ -98,7 +106,8 @@ class WallpaperViewModel : ViewModel() {
     }
 
     fun getWallpapers(context: Context) {
-        val call: Call<WallpaperResponse> = service.getWallpapers(getRandomNumber(), getSelectedCollection(context).joinToString(", "))
+        val call: Call<WallpaperResponse> = service.getWallpapers(getRandomNumber(), getSelectedCollection(context, context.getString(
+            R.string.app_collection_key)).joinToString(", "))
 
         call.enqueue(object : Callback<WallpaperResponse> {
             override fun onResponse(call: Call<WallpaperResponse>, response: Response<WallpaperResponse>) {

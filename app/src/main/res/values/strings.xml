@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ONEMB Wallpapers</string>
+    <string name="app_collection_key">"ONEMBCollection"</string>
+    <string name="app_wallpapers_key">"ONEMBWallpapersData"</string>
 </resources>

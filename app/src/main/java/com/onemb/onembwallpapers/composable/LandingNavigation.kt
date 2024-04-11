@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 
 @Composable
@@ -27,7 +28,7 @@ fun LandingNavigation() {
     val viewModel: WallpaperViewModel = viewModel()
     val context = LocalContext.current
     val bitmapLoaded = viewModel.wallpapersBitmapLoaded.observeAsState()
-    val isCategoriesSelected = viewModel.getSelectedCollection(context).isNotEmpty()
+    val isCategoriesSelected = viewModel.getSelectedCollection(context, context.getString(R.string.app_collection_key)).isNotEmpty()
     if(isCategoriesSelected) {
         viewModel.getWallpapers(context)
     }
