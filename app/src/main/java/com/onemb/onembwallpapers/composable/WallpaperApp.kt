@@ -72,25 +72,9 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                     )
                 }
             )
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    navController.navigate("Categories")
-                },
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowBack,
-                    contentDescription = "Done icon",
-                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                )
-            }
         }
     ) { innerPadding ->
         val wallpapersState = viewModel.wallpapers.observeAsState()
-        val width = ScreenUtils.getScreenWidth(context);
-        val height = ScreenUtils.getScreenHeight(context);
         val arrayIndex = remember {
             mutableIntStateOf(0)
         }
@@ -101,8 +85,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
 
 
         LazyVerticalGrid(columns = GridCells.Fixed(3), modifier = Modifier.padding(innerPadding)) {
-            wallpapersState.value?.photos
-                ?.filter { it.width >= width && it.height >= height }
+            wallpapersState.value
                 ?.let { wallpapers ->
                 itemsIndexed(wallpapers) { index, _ ->
                     if(index == 0) {
@@ -136,8 +119,8 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Set every 30 min",
-                                        fontWeight = FontWeight.Bold
+                                        text = "Change every 30 minutes",
+                                        fontWeight = FontWeight.Light
                                     )
                                 }
                             }
@@ -150,7 +133,8 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                 .height(200.dp)
                                 .clickable {
                                     arrayIndex.intValue = index
-                                    wallpapersState.value?.photos?.get(index)?.src?.original?.let {
+
+                                    wallpapersState.value?.get(index)?.url?.let {
                                         viewModel.setWallpaperFromUrl(
                                             it,
                                             context
@@ -166,7 +150,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 AsyncImage(
-                                    model = wallpapersState.value?.photos?.get(index)?.src?.large,
+                                    model = wallpapersState.value?.get(index)?.url,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop
                                 )

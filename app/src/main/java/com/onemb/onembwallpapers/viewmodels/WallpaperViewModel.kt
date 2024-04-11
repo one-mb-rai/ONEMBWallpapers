@@ -16,11 +16,14 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.CollectionResponse
+import com.onemb.onembwallpapers.services.JSONResponse
 import com.onemb.onembwallpapers.services.PixelsWallpaperService
 import com.onemb.onembwallpapers.services.WallpaperResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONException
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,10 +32,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.io.InputStream
 import kotlin.random.Random
+
 
 class WallpaperViewModel : ViewModel() {
     private val retrofit: Retrofit = Retrofit.Builder().
@@ -41,11 +43,8 @@ class WallpaperViewModel : ViewModel() {
                              build();
     private var service = retrofit.create(PixelsWallpaperService::class.java)
 
-    private val _wallpapers = MutableLiveData<WallpaperResponse?>()
-    val wallpapers: MutableLiveData<WallpaperResponse?> = _wallpapers
-
-    private val _collections = MutableLiveData<CollectionResponse?>()
-    val collections: MutableLiveData<CollectionResponse?> = _collections
+    private val _wallpapers = MutableLiveData<List<JSONResponse>>()
+    val wallpapers: MutableLiveData<List<JSONResponse>> = _wallpapers
 
     private val _wallpapersBitmapLoaded = MutableLiveData(false)
     val wallpapersBitmapLoaded: MutableLiveData<Boolean> = _wallpapersBitmapLoaded
@@ -53,7 +52,37 @@ class WallpaperViewModel : ViewModel() {
     private var wallpaperBitmap: Bitmap? = null
 
     init {
-        getWallpapersCategories()
+//        getWallpapersCategories()
+    }
+
+    fun loadLocalJson(context: Context) {
+        try {
+            val inputStream: InputStream = context.getAssets().open("fileList.json")
+            val size = inputStream.available()
+            val buffer = ByteArray(size)
+            inputStream.read(buffer)
+            inputStream.close()
+            val json = String(buffer, charset("UTF-8"))
+            val fileList = mutableListOf<JSONResponse>()
+
+            // Parse the JSON string
+            val jsonArray = JSONArray(json)
+            Log.d("ARRAY", jsonArray.toString())
+            for (i in 0 until jsonArray.length()) {
+                val jsonObject = jsonArray.getJSONObject(i)
+
+                val fileName = jsonObject.getString("name")
+                val fileUrl = jsonObject.getString("url")
+                val jsonResponse = JSONResponse(fileName, fileUrl)
+                fileList.add(jsonResponse)
+            }
+            _wallpapers.value = fileList
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+
     }
 
     fun getSharedPreferences(context: Context): SharedPreferences {
@@ -83,47 +112,6 @@ class WallpaperViewModel : ViewModel() {
 
     private fun getRandomNumber(): Int {
         return Random.nextInt(1, 100)
-    }
-
-    fun getWallpapersCategories() {
-        val call: Call<CollectionResponse> = service.getCollections()
-
-        call.enqueue(object : Callback<CollectionResponse> {
-            override fun onResponse(call: Call<CollectionResponse>, response: Response<CollectionResponse>) {
-                if (response.isSuccessful) {
-                    val collections: CollectionResponse? = response.body()
-                    _collections.value = collections
-                    Log.d("Response", response.body().toString())
-                } else {
-                    Log.d("HTTP Error", "Failed to fetch collections: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(p0: Call<CollectionResponse>, p1: Throwable) {
-                Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
-            }
-        })
-    }
-
-    fun getWallpapers(context: Context) {
-        val call: Call<WallpaperResponse> = service.getWallpapers(getRandomNumber(), getSelectedCollection(context, context.getString(
-            R.string.app_collection_key)).joinToString(", "))
-
-        call.enqueue(object : Callback<WallpaperResponse> {
-            override fun onResponse(call: Call<WallpaperResponse>, response: Response<WallpaperResponse>) {
-                if (response.isSuccessful) {
-                    val wallpapers: WallpaperResponse? = response.body()
-                    _wallpapers.value = wallpapers
-                    Log.d("Response", wallpapers?.photos?.toString()!!)
-                } else {
-                    Log.d("HTTP Error", "Failed to fetch wallpapers: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(p0: Call<WallpaperResponse>, p1: Throwable) {
-                Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
-            }
-        })
     }
 
     fun getWallpaperBitmap(): Bitmap? {

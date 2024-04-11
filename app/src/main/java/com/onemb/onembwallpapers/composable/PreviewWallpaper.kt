@@ -69,24 +69,18 @@ fun WallpaperPreview(
 
             Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentScale = ContentScale.FillBounds,
+                contentScale = ContentScale.None,
                 contentDescription = null
             )
             Button(
                 onClick = {
+                    viewModel.setWallpapersBitmapLoaded(false)
+
                     viewModel.viewModelScope.launch {
-//                        val sourceUri = viewModel.getWallpaperBitmap()
-//                            ?.let { viewModel.saveBitmapAndGetUri(it, context) }!!
-//                        val destinationUri =
-//                        UCrop.of(sourceUri, destinationUri)
-//                            .withAspectRatio(16F, 9F)
-//                            .withMaxResultSize(getScreenWidth(context), getScreenHeight(context))
-//                            .start(context as Activity);
+                        viewModel.setWallpaper(viewModel.getWallpaperBitmap()!!, context)
                     }
-//                            viewModel.setWallpaper(viewModel.getWallpaperBitmap()!!, context)
-//                        }
-//                        viewModel.setWallpapersBitmapLoaded(false)
-//                        navController.popBackStack()
+                    navController.popBackStack()
+
                 },
                 modifier = Modifier
                     .fillMaxWidth()

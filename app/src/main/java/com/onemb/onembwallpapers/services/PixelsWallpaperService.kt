@@ -58,6 +58,11 @@ data class Collection(
     val videos_count: Int
 )
 
+data class JSONResponse(
+    val name: String,
+    val url: String
+)
+
 
 interface PixelsWallpaperService {
 
