@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
+import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.Wallpaper
 import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.services.Wallpapers
@@ -36,7 +37,7 @@ import kotlin.random.Random
 
 interface WallpaperSetListener {
     suspend fun onWallpaperSet()
-    fun onWallpaperSetError(error: Throwable)
+    suspend fun onWallpaperSetError(error: Throwable)
 }
 
 interface BitmapSetListener {
@@ -49,21 +50,25 @@ class WallpaperViewModel : ViewModel() {
     private val _wallpapers = MutableLiveData<List<Wallpapers>>()
     val wallpapers: MutableLiveData<List<Wallpapers>> = _wallpapers
 
-    private val _wallpapersBitmapLoaded = MutableLiveData(false)
-    val wallpapersBitmapLoaded: MutableLiveData<Boolean> = _wallpapersBitmapLoaded
-
     private val _collections = MutableLiveData<MutableList<String>?>()
     val collections: MutableLiveData<MutableList<String>?> = _collections
 
+    private val _selectedCollection = MutableLiveData<List<String>?>()
+    val selectedCollection: MutableLiveData<List<String>?> = _selectedCollection
+
     private var wallpaperBitmap: Bitmap? = null
 
-    val _isLoading = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: Flow<Boolean> = _isLoading
 
     init {
 //        getWallpapersCategories()
     }
 
+
+    fun setLoading(value: Boolean) {
+        _isLoading.value = value
+    }
 
     fun loadLocalJson(context: Context) {
         try {
@@ -105,6 +110,7 @@ class WallpaperViewModel : ViewModel() {
             // Set the result to LiveData or do whatever you need to do with it
             _wallpapers.value = fileList
 
+
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: JSONException) {
@@ -113,7 +119,7 @@ class WallpaperViewModel : ViewModel() {
     }
 
 
-    fun getSharedPreferences(context: Context): SharedPreferences {
+    private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("ONEMBCollectionPreferences", Context.MODE_PRIVATE)
     }
 
@@ -123,6 +129,7 @@ class WallpaperViewModel : ViewModel() {
         val editor = sharedPreferences.edit()
         editor.putStringSet(listName, selectedCollection.toSet())
         editor.apply()
+        _selectedCollection.value = selectedCollection
     }
 
     // Function to retrieve selectedCollection from SharedPreferences
@@ -146,16 +153,12 @@ class WallpaperViewModel : ViewModel() {
         return wallpaperBitmap
     }
 
-    fun setWallpapersBitmapLoaded(value: Boolean) {
-        _wallpapersBitmapLoaded.value = value
-    }
 
     fun setWallpaperFromUrl(imageUrl: String, context: Context, listener: BitmapSetListener) {
         viewModelScope.launch {
             try {
                 val bitmap = loadImageBitmap(imageUrl, context)
                 wallpaperBitmap = bitmap
-                setWallpapersBitmapLoaded(true)
                 listener.onBitmapSet()
             } catch (e: IOException) {
                 listener.onBitmapSetError(e)
@@ -217,8 +220,10 @@ class WallpaperViewModel : ViewModel() {
             try {
                 wallpaperManager.setBitmap(bitmap)
                 wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
-                _isLoading.value = false
                 listener.onWallpaperSet()
+
+                _isLoading.value = false
+
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
                 listener.onWallpaperSetError(e)

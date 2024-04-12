@@ -1,40 +1,29 @@
 package com.onemb.onembwallpapers
 
 import android.Manifest
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onemb.onembwallpapers.composable.LandingNavigation
 import com.onemb.onembwallpapers.ui.theme.ONEMBWallpapersTheme
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
-import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -42,13 +31,38 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             ONEMBWallpapersTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LandingNavigation()
+                    val viewModel: WallpaperViewModel = viewModel()
+                    val isLoading = viewModel.isLoading.collectAsState(initial = false).value
+
+                    LandingNavigation(viewModel)
+
+                    if(isLoading) {
+                        Surface(
+                            color = Color.Transparent,
+                            modifier = Modifier.fillMaxSize(),
+                            tonalElevation = 16.dp,
+                            shadowElevation = 16.dp,
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .align(Alignment.Center).size(200.dp),
+                                    strokeWidth = 4.dp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

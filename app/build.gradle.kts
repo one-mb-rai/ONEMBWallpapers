@@ -22,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -81,4 +81,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     //noinspection UseTomlInstead
     implementation("com.github.yalantis:ucrop:2.2.8-native")
+    //noinspection UseTomlInstead
+    implementation("androidx.navigation:navigation-dynamic-features-fragment:2.7.7")
+    //noinspection UseTomlInstead
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
 }

@@ -1,9 +1,7 @@
 package com.onemb.onembwallpapers.composable
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +18,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,46 +32,34 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import coil.compose.AsyncImage
 import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.Wallpaper
 import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
-import com.onemb.onembwallpapers.utils.ScreenUtils
 import com.onemb.onembwallpapers.viewmodels.BitmapSetListener
-import com.onemb.onembwallpapers.viewmodels.WallpaperSetListener
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
+fun WallpaperApp(onNavigateToPreview: () -> Unit, onNavigateToCategories: () -> Unit, viewModel: WallpaperViewModel) {
     val context = LocalContext.current
-    val isLoading = viewModel.isLoading.collectAsState(initial = false).value
     val wallpapersState = viewModel.wallpapers.observeAsState()
     val combinedDataList = mutableListOf<Wallpaper>()
     val keys = viewModel.getSelectedCollection(context, context.getString(R.string.app_collection_key))
@@ -86,19 +71,11 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
             combinedDataList.addAll(dataForCurrentKey)
         }
     }
-
-    val listener = object : BitmapSetListener {
-        override suspend fun onBitmapSet() {
-            withContext(Dispatchers.Main) {
-                navController.navigate("Preview")
-            }
-        }
-        override fun onBitmapSetError(error: Throwable) {
-
-        }
-    }
+    val callbackComplete = remember{ mutableStateOf(false)}
 
     LaunchedEffect(null) {
+        viewModel.setLoading(false)
+        callbackComplete.value = false
         if(viewModel.isForegroundServiceRunning(context)) {
             serviceRunning.value = true
         }
@@ -124,7 +101,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    navController.navigate("Categories")
+                    onNavigateToCategories()
                 },
             ) {
                 Icon(
@@ -135,6 +112,17 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
             }
         }
     ) { innerPadding ->
+        val listener = object : BitmapSetListener {
+            override suspend fun onBitmapSet() {
+                callbackComplete.value = true
+            }
+            override fun onBitmapSetError(error: Throwable) {
+                callbackComplete.value = true
+            }
+        }
+        if(callbackComplete.value) {
+            onNavigateToPreview()
+        }
         Box {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -211,7 +199,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                 .fillMaxSize()
                                 .height(200.dp)
                                 .clickable {
-                                    viewModel._isLoading.value = true
+                                    viewModel.setLoading(true)
                                     combinedDataList[index].url.let {
                                         viewModel.setWallpaperFromUrl(
                                             it,
@@ -238,16 +226,6 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                 }
             }
 
-            TransparentLoaderVisibility(isLoading)
         }
-    }
-}
-
-
-@SuppressLint("FlowOperatorInvokedInComposition")
-@Composable
-fun TransparentLoaderVisibility(isLoading: Boolean) {
-    if (isLoading) {
-        TransparentLoader()
     }
 }
