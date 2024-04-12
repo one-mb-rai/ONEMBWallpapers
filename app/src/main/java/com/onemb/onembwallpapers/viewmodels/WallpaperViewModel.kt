@@ -223,7 +223,15 @@ class WallpaperViewModel : ViewModel() {
                 listener.onWallpaperSet()
 
                 _isLoading.value = false
-
+                withContext(Dispatchers.Main) {
+                    Toast
+                        .makeText(
+                            context,
+                            "Wallpaper change successful",
+                            1000 * 3
+                        )
+                        .show()
+                }
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
                 listener.onWallpaperSetError(e)

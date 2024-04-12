@@ -51,7 +51,7 @@ fun WallpaperPreview(
     }
 
     if(callbackComplete.value) {
-        onNavigateBack()
+//        onNavigateBack()
     }
 
     Box {
@@ -73,6 +73,7 @@ fun WallpaperPreview(
                 )
                 Button(
                     onClick = {
+                        onNavigateBack()
                         viewModel.setLoading(true)
                         viewModel.viewModelScope.launch {
                             if(viewModel.isForegroundServiceRunning(context)) {

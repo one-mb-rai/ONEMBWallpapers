@@ -74,7 +74,6 @@ fun WallpaperApp(onNavigateToPreview: () -> Unit, onNavigateToCategories: () -> 
     val callbackComplete = remember{ mutableStateOf(false)}
 
     LaunchedEffect(null) {
-        viewModel.setLoading(false)
         callbackComplete.value = false
         if(viewModel.isForegroundServiceRunning(context)) {
             serviceRunning.value = true
