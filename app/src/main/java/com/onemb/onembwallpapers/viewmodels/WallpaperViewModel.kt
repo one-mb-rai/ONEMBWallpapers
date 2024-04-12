@@ -1,6 +1,7 @@
 package com.onemb.onembwallpapers.viewmodels
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.SharedPreferences
@@ -8,23 +9,23 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
-import com.onemb.onembwallpapers.services.CollectionResponse
-import com.onemb.onembwallpapers.services.PixelsWallpaperService
 import com.onemb.onembwallpapers.services.Wallpaper
+import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.services.Wallpapers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -32,12 +33,18 @@ import java.io.InputStream
 import kotlin.random.Random
 
 
+
+interface WallpaperSetListener {
+    suspend fun onWallpaperSet()
+    fun onWallpaperSetError(error: Throwable)
+}
+
+interface BitmapSetListener {
+    suspend fun onBitmapSet()
+    fun onBitmapSetError(error: Throwable)
+}
+
 class WallpaperViewModel : ViewModel() {
-    private val retrofit: Retrofit = Retrofit.Builder().
-                             baseUrl("https://api.pexels.com/").
-                             addConverterFactory(GsonConverterFactory.create()).
-                             build();
-    private var service = retrofit.create(PixelsWallpaperService::class.java)
 
     private val _wallpapers = MutableLiveData<List<Wallpapers>>()
     val wallpapers: MutableLiveData<List<Wallpapers>> = _wallpapers
@@ -45,10 +52,13 @@ class WallpaperViewModel : ViewModel() {
     private val _wallpapersBitmapLoaded = MutableLiveData(false)
     val wallpapersBitmapLoaded: MutableLiveData<Boolean> = _wallpapersBitmapLoaded
 
-    private val _collections = MutableLiveData<CollectionResponse?>()
-    val collections: MutableLiveData<CollectionResponse?> = _collections
+    private val _collections = MutableLiveData<MutableList<String>?>()
+    val collections: MutableLiveData<MutableList<String>?> = _collections
 
     private var wallpaperBitmap: Bitmap? = null
+
+    val _isLoading = MutableStateFlow(false)
+    val isLoading: Flow<Boolean> = _isLoading
 
     init {
 //        getWallpapersCategories()
@@ -68,12 +78,14 @@ class WallpaperViewModel : ViewModel() {
             val jsonObject = JSONObject(json)
             val wallpapersObject = jsonObject.getJSONObject("wallpapers")
             val fileList = mutableListOf<Wallpapers>()
+            val keysList = mutableListOf<String>()
 
             // Iterate through each folder
             val keys = wallpapersObject.keys()
             while (keys.hasNext()) {
                 val folderName = keys.next()
                 val jsonArray = wallpapersObject.getJSONArray(folderName)
+                keysList.add(folderName)
 
                 // Iterate through wallpapers in the folder
                 val wallpapersList = mutableListOf<Wallpaper>()
@@ -89,8 +101,10 @@ class WallpaperViewModel : ViewModel() {
                 fileList.add(Wallpapers(mapOf(folderName to wallpapersList)))
             }
 
+            _collections.value = keysList
             // Set the result to LiveData or do whatever you need to do with it
             _wallpapers.value = fileList
+
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: JSONException) {
@@ -136,13 +150,15 @@ class WallpaperViewModel : ViewModel() {
         _wallpapersBitmapLoaded.value = value
     }
 
-    fun setWallpaperFromUrl(imageUrl: String, context: Context) {
+    fun setWallpaperFromUrl(imageUrl: String, context: Context, listener: BitmapSetListener) {
         viewModelScope.launch {
             try {
                 val bitmap = loadImageBitmap(imageUrl, context)
                 wallpaperBitmap = bitmap
                 setWallpapersBitmapLoaded(true)
+                listener.onBitmapSet()
             } catch (e: IOException) {
+                listener.onBitmapSetError(e)
                 Log.e("WallpaperViewModel", "Error loading image bitmap: ${e.message}")
             }
         }
@@ -185,14 +201,27 @@ class WallpaperViewModel : ViewModel() {
         }
     }
 
-    suspend fun setWallpaper(bitmap: Bitmap, context: Context) {
+    fun isForegroundServiceRunning(context: Context): Boolean {
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (WallpaperChangeForegroundService::class.java.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
+    suspend fun setWallpaper(bitmap: Bitmap, context: Context, listener: WallpaperSetListener) {
         withContext(Dispatchers.IO) {
             val wallpaperManager = WallpaperManager.getInstance(context)
             try {
                 wallpaperManager.setBitmap(bitmap)
                 wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                _isLoading.value = false
+                listener.onWallpaperSet()
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
+                listener.onWallpaperSetError(e)
                 Log.e("WallpaperViewModel", "Error setting wallpaper: ${e.message}")
             }
         }

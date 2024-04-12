@@ -1,6 +1,8 @@
 package com.onemb.onembwallpapers.composable
 
+import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -52,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.onemb.onembwallpapers.R
+import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 
 
@@ -82,6 +85,12 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
             FloatingActionButton(
                 onClick = {
                     viewModel.saveSelectedCollection(context, selectedCollection, context.getString(R.string.app_collection_key))
+                    Toast.makeText(context, "Wallpaper change service stopped", 1000 * 3).show()
+                    val serviceIntent = Intent(
+                        context,
+                        WallpaperChangeForegroundService::class.java
+                    )
+                    context.stopService(serviceIntent)
                     navController.navigate("Home")
                 },
             ) {
@@ -101,7 +110,7 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
         }
 
         LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.padding(innerPadding)) {
-            collectionsState.value?.collections?.let { item ->
+            collectionsState.value?.let { item ->
                 itemsIndexed(item) { index, _ ->
                     Row(
                         modifier = Modifier
@@ -110,20 +119,20 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
                         ElevatedFilterChip(
                             modifier = Modifier.fillMaxSize(),
                             onClick = {
-                                selectedCollection = if (selectedCollection.contains(collectionsState.value?.collections!![index].title)) {
-                                    selectedCollection - collectionsState.value?.collections!![index].title
+                                selectedCollection = if (selectedCollection.contains(collectionsState.value!![index])) {
+                                    selectedCollection - collectionsState.value!![index]
                                 } else {
-                                    selectedCollection + collectionsState.value?.collections!![index].title
+                                    selectedCollection + collectionsState.value!![index]
                                 }
                                 Log.d("DATA", selectedCollection.joinToString(", "))
                             },
                             label = {
                                 Text(
-                                    collectionsState.value?.collections!![index].title,
+                                    collectionsState.value!![index],
                                 )
                             },
-                            selected = selectedCollection.contains(collectionsState.value?.collections!![index].title),
-                            leadingIcon = if(selectedCollection.contains(collectionsState.value?.collections!![index].title)) {
+                            selected = selectedCollection.contains(collectionsState.value!![index]),
+                            leadingIcon = if(selectedCollection.contains(collectionsState.value!![index])) {
                                 {
                                     Icon(
                                         imageVector = Icons.Filled.Done,

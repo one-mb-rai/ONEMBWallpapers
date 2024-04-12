@@ -17,6 +17,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.MutableLiveData
 import coil.ImageLoader
 import coil.request.ImageRequest
 import com.onemb.onembwallpapers.MainActivity
@@ -26,30 +27,29 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONException
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
+import java.io.InputStream
 import kotlin.random.Random
 
 class WallpaperChangeForegroundService : Service() {
-    private val retrofit: Retrofit = Retrofit.Builder().
-        baseUrl("https://api.pexels.com/").
-        addConverterFactory(GsonConverterFactory.create()).
-        build();
-    private var service = retrofit.create(PixelsWallpaperService::class.java)
-    private var wallpaperResponse: WallpaperResponse? = null
+
+    private var wallpapers: List<Wallpapers> = emptyList()
+
+    private var collections: List<String> = emptyList()
+
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "ScreenUnlockServiceChannel"
         private const val NOTIFICATION_ID = 1
     }
 
     private var isServiceRunning = false
-    private var index = 0
-    private var id = ""
-
     /**
      * Returns null since the service does not provide binding.
      */
@@ -113,47 +113,57 @@ class WallpaperChangeForegroundService : Service() {
         isServiceRunning = true
     }
 
-    fun getSharedPreferences(context: Context): SharedPreferences {
+    private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("ONEMBCollectionPreferences", Context.MODE_PRIVATE)
     }
 
     private fun startFunction(context: Context) {
         Thread {
             while (isServiceRunning) {
-                if(wallpaperResponse != null) {
-                    startWallpaperSetProcess(wallpaperResponse!!, context)
-                } else {
-                    val sharedPreferences = getSharedPreferences(context)
-                    val selectedCollectionSet = sharedPreferences.getStringSet("ONEMBCollection", emptySet())
+                try {
+                    val inputStream: InputStream = context.assets.open("fileList.json")
+                    val size = inputStream.available()
+                    val buffer = ByteArray(size)
+                    inputStream.read(buffer)
+                    inputStream.close()
+                    val json = String(buffer, charset("UTF-8"))
 
-                    val call: Call<WallpaperResponse> =
-                        service.getWallpapers(Random.nextInt(1, 100), (selectedCollectionSet?.toList() ?: emptyList()).joinToString(", "))
-                    call.enqueue(object : Callback<WallpaperResponse> {
-                        override fun onResponse(
-                            call: Call<WallpaperResponse>,
-                            response: Response<WallpaperResponse>
-                        ) {
-                            if (response.isSuccessful) {
-                                val wallpapers: WallpaperResponse? = response.body()
-                                if (wallpapers != null) {
-                                    wallpaperResponse = wallpapers
-                                }
-                                if (wallpapers != null) {
-                                    startWallpaperSetProcess(wallpapers, context)
-                                }
-                                Log.d("Response", wallpapers?.photos?.size.toString())
-                            } else {
-                                Log.d(
-                                    "HTTP Error",
-                                    "Failed to fetch wallpapers: ${response.code()}"
-                                )
-                            }
+                    // Parse the JSON string
+                    val jsonObject = JSONObject(json)
+                    val wallpapersObject = jsonObject.getJSONObject("wallpapers")
+                    val fileList = mutableListOf<Wallpapers>()
+                    val keysList = mutableListOf<String>()
+
+                    // Iterate through each folder
+                    val keys = wallpapersObject.keys()
+                    while (keys.hasNext()) {
+                        val folderName = keys.next()
+                        val jsonArray = wallpapersObject.getJSONArray(folderName)
+                        keysList.add(folderName)
+
+                        // Iterate through wallpapers in the folder
+                        val wallpapersList = mutableListOf<Wallpaper>()
+                        for (i in 0 until jsonArray.length()) {
+                            val wallpaperObject = jsonArray.getJSONObject(i)
+                            val fileName = wallpaperObject.getString("name")
+                            val fileUrl = wallpaperObject.getString("url")
+                            val wallpaper = Wallpaper(fileName, fileUrl)
+                            wallpapersList.add(wallpaper)
                         }
 
-                        override fun onFailure(p0: Call<WallpaperResponse>, p1: Throwable) {
-                            Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
-                        }
-                    })
+                        // Add wallpapers list to the result
+                        fileList.add(Wallpapers(mapOf(folderName to wallpapersList)))
+                    }
+
+                    collections = keysList
+                    // Set the result to LiveData or do whatever you need to do with it
+                    wallpapers = fileList
+                    startWallpaperSetProcess(wallpapers, context)
+
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                } catch (e: JSONException) {
+                    e.printStackTrace()
                 }
 
                 // Sleep for a specified interval
@@ -162,11 +172,29 @@ class WallpaperChangeForegroundService : Service() {
         }.start()
     }
 
+
+    private fun getSelectedCollection(context: Context, listName: String): List<String> {
+        val sharedPreferences = getSharedPreferences(context)
+        val selectedCollectionSet = sharedPreferences.getStringSet(listName, emptySet())
+        return selectedCollectionSet?.toList() ?: emptyList()
+    }
+
+
     @OptIn(DelicateCoroutinesApi::class)
-    private fun startWallpaperSetProcess(wallpapers: WallpaperResponse, context: Context) {
-        index = Random.nextInt(1, 60)
-        val bitmap = wallpapers.photos[index].src.original
-        id = wallpapers.photos[index].photographer_id.toString()
+    private fun startWallpaperSetProcess(wallpapers: List<Wallpapers>?, context: Context) {
+        val randomIndex = Random.nextInt(1, wallpapers?.size!! - 2)
+
+        val combinedDataList = mutableListOf<Wallpaper>()
+        val keys = getSelectedCollection(context, context.getString(R.string.app_collection_key))
+
+        for (key in keys) {
+            val index = wallpapers.indexOfFirst { wallpaperKey ->  wallpaperKey.wallpapers.containsKey(key)}!!
+            val dataForCurrentKey = wallpapers[index].wallpapers[key]
+            if (dataForCurrentKey != null) {
+                combinedDataList.addAll(dataForCurrentKey)
+            }
+        }
+        val bitmap = combinedDataList[randomIndex].url
         GlobalScope.launch(Dispatchers.Main) {
             try {
                 val bitmapFile = loadImageBitmap(bitmap, context)
@@ -203,13 +231,7 @@ class WallpaperChangeForegroundService : Service() {
             try {
                 wallpaperManager.setBitmap(bitmap)
                 wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
-                Toast.makeText(context, "Wallpaper changed", 1000 * 3).show()
-                wallpaperResponse = if(wallpaperResponse?.photos?.isEmpty() == true) {
-                    null
-                } else {
-                    wallpaperResponse?.photos?.filter { it.photographer_id.toString() != id }
-                        ?.let { wallpaperResponse?.copy(photos = it) }
-                }
+                Toast.makeText(context, "Wallpaper has changed", 1000 * 3).show()
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
                 Log.e("WallpaperViewModel", "Error setting wallpaper: ${e.message}")
