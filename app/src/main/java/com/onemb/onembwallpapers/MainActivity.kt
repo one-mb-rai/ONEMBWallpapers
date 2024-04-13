@@ -10,10 +10,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
@@ -23,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onemb.onembwallpapers.composable.LandingNavigation
@@ -49,28 +45,29 @@ class MainActivity : ComponentActivity() {
                     val isLoading = viewModel.isLoading.collectAsState(initial = false).value
                     viewModel.loadLocalJson(this)
                     val isCategoriesSelected: Boolean = viewModel.getSelectedCollection(this, this.getString(R.string.app_collection_key)).isNotEmpty()
+                    Box {
+                        LandingNavigation(viewModel, isCategoriesSelected)
 
-                    LandingNavigation(viewModel, isCategoriesSelected)
-
-                    keepSplashScreen = false
-                    if(isLoading) {
-                        Surface(
-                            color = Color.Transparent,
-                            modifier = Modifier.fillMaxSize(),
-                            tonalElevation = 16.dp,
-                            shadowElevation = 16.dp,
-                        ) {
-                            Box(
+                        keepSplashScreen = false
+                        if (isLoading) {
+                            Surface(
+                                color = Color.Transparent,
                                 modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                tonalElevation = 16.dp,
+                                shadowElevation = 16.dp,
                             ) {
-                                LinearProgressIndicator(
-                                    color = MaterialTheme.colorScheme.tertiary,
-                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    modifier = Modifier
-                                        .align(Alignment.Center).fillMaxWidth(0.8f),
-//                                    strokeWidth = 4.dp,
-                                )
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        modifier = Modifier
+                                            .align(Alignment.Center).fillMaxWidth(0.8f),
+                                        strokeWidth = 4.dp,
+                                    )
+                                }
                             }
                         }
                     }

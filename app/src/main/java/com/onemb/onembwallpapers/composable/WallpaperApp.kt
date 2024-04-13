@@ -1,7 +1,7 @@
 package com.onemb.onembwallpapers.composable
 
-import android.annotation.SuppressLint
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,14 +51,12 @@ import com.onemb.onembwallpapers.services.Wallpaper
 import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.viewmodels.BitmapSetListener
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WallpaperApp(onNavigateToPreview: () -> Unit, onNavigateToCategories: () -> Unit, viewModel: WallpaperViewModel) {
+fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
     val context = LocalContext.current
     val wallpapersState = viewModel.wallpapers.observeAsState()
     val combinedDataList = mutableListOf<Wallpaper>()
@@ -71,10 +69,10 @@ fun WallpaperApp(onNavigateToPreview: () -> Unit, onNavigateToCategories: () -> 
             combinedDataList.addAll(dataForCurrentKey)
         }
     }
-    val callbackComplete = remember{ mutableStateOf(false)}
+    val navigatedPreview = viewModel.navigatedPreview.collectAsState(initial = false).value
+
 
     LaunchedEffect(null) {
-        callbackComplete.value = false
         if(viewModel.isForegroundServiceRunning(context)) {
             serviceRunning.value = true
         }
@@ -100,7 +98,7 @@ fun WallpaperApp(onNavigateToPreview: () -> Unit, onNavigateToCategories: () -> 
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    onNavigateToCategories()
+                    navController.navigate("Categories")
                 },
             ) {
                 Icon(
@@ -113,15 +111,18 @@ fun WallpaperApp(onNavigateToPreview: () -> Unit, onNavigateToCategories: () -> 
     ) { innerPadding ->
         val listener = object : BitmapSetListener {
             override suspend fun onBitmapSet() {
-                callbackComplete.value = true
+                Log.d("APPP", "APPP")
+                if(!navigatedPreview) {
+                    viewModel.setNavigatedPreview(true)
+                    navController.navigate("Preview")
+                }
             }
             override fun onBitmapSetError(error: Throwable) {
-                callbackComplete.value = true
+
             }
         }
-        if(callbackComplete.value) {
-            onNavigateToPreview()
-        }
+
+
         Box {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),

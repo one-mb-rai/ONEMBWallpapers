@@ -34,13 +34,6 @@ import java.io.IOException
 import java.io.InputStream
 import kotlin.random.Random
 
-
-
-interface WallpaperSetListener {
-    suspend fun onWallpaperSet()
-    suspend fun onWallpaperSetError(error: Throwable)
-}
-
 interface BitmapSetListener {
     suspend fun onBitmapSet()
     fun onBitmapSetError(error: Throwable)
@@ -62,13 +55,23 @@ class WallpaperViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: Flow<Boolean> = _isLoading
 
-    init {
-//        getWallpapersCategories()
-    }
+    private val _wallpaperSet = MutableStateFlow(false)
+    val wallpaperSet: Flow<Boolean> = _wallpaperSet
+
+    private val _navigatedPreview = MutableStateFlow(false)
+    val navigatedPreview: Flow<Boolean> = _navigatedPreview
 
 
     fun setLoading(value: Boolean) {
         _isLoading.value = value
+    }
+
+    fun setNavigatedPreview(value: Boolean) {
+        _navigatedPreview.value = value
+    }
+
+    fun wallpaperSet(value: Boolean) {
+        _wallpaperSet.value = value
     }
 
     fun loadLocalJson(context: Context) {
@@ -219,23 +222,24 @@ class WallpaperViewModel : ViewModel() {
         withContext(Dispatchers.IO) {
             val wallpaperManager = WallpaperManager.getInstance(context)
             try {
+                setLoading(true)
                 wallpaperManager.setBitmap(bitmap)
                 wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
-
-                _isLoading.value = false
-                withContext(Dispatchers.Main) {
-                    Toast
-                        .makeText(
-                            context,
-                            "Wallpaper change successful",
-                            Toast.LENGTH_LONG
-                        )
-                        .show()
-                }
+                setLoading(false)
+                wallpaperSet(true)
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
                 Log.e("WallpaperViewModel", "Error setting wallpaper: ${e.message}")
             }
+        }
+        withContext(Dispatchers.Main) {
+            Toast
+                .makeText(
+                    context,
+                    "Wallpaper change successful",
+                    Toast.LENGTH_LONG
+                )
+                .show()
         }
     }
 

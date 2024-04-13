@@ -44,7 +44,7 @@ import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WallpaperCategory(onNavigateToHome: () -> Unit, viewModel: WallpaperViewModel) {
+fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewModel) {
     val collectionsState = viewModel.collections.observeAsState()
     var selectedCollection by remember { mutableStateOf(emptyList<String>()) }
     val context = LocalContext.current
@@ -78,7 +78,7 @@ fun WallpaperCategory(onNavigateToHome: () -> Unit, viewModel: WallpaperViewMode
                         )
                         context.stopService(serviceIntent)
                     }
-                    onNavigateToHome()
+                    navController.navigate("Home")
                 },
             ) {
                 Icon(

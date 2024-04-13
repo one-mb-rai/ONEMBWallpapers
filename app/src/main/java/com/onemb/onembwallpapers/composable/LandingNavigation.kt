@@ -17,25 +17,23 @@ fun LandingNavigation(viewModel: WallpaperViewModel, isCategoriesSelected: Boole
     NavHost(navController = navController, startDestination = if(isCategoriesSelected) "Home" else "Categories") {
         composable("Categories") {
             WallpaperCategory(
-                onNavigateToHome = { navController.navigate("Home") },
+                navController,
                 viewModel
             )
         }
         composable("Home") {
             WallpaperApp(
-                onNavigateToPreview = { navController.navigate("previewRoute") },
-                onNavigateToCategories = { navController.navigate("Categories") },
+                navController,
                 viewModel
             )
 
         }
-        navigation(startDestination = "Preview", route = "previewRoute") {
-            composable("Preview") {
-                WallpaperPreview(
-                    viewModel.getWallpaperBitmap()!!,
-                    viewModel,
-                    onNavigateBack = { navController.navigate("Home") { popUpTo("Home")} })
-            }
+        composable("Preview") {
+            WallpaperPreview(
+                viewModel.getWallpaperBitmap()!!,
+                viewModel,
+                navController
+            )
         }
     }
 }
