@@ -85,4 +85,7 @@ dependencies {
     implementation("androidx.navigation:navigation-dynamic-features-fragment:2.7.7")
     //noinspection UseTomlInstead
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    //noinspection UseTomlInstead
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
 }

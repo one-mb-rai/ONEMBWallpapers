@@ -21,6 +21,7 @@ import com.onemb.onembwallpapers.services.Wallpaper
 import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.services.Wallpapers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -214,13 +215,12 @@ class WallpaperViewModel : ViewModel() {
         return false
     }
 
-    suspend fun setWallpaper(bitmap: Bitmap, context: Context, listener: WallpaperSetListener) {
+    suspend fun setWallpaper(bitmap: Bitmap, context: Context) {
         withContext(Dispatchers.IO) {
             val wallpaperManager = WallpaperManager.getInstance(context)
             try {
                 wallpaperManager.setBitmap(bitmap)
                 wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
-                listener.onWallpaperSet()
 
                 _isLoading.value = false
                 withContext(Dispatchers.Main) {
@@ -228,13 +228,12 @@ class WallpaperViewModel : ViewModel() {
                         .makeText(
                             context,
                             "Wallpaper change successful",
-                            1000 * 3
+                            Toast.LENGTH_LONG
                         )
                         .show()
                 }
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
-                listener.onWallpaperSetError(e)
                 Log.e("WallpaperViewModel", "Error setting wallpaper: ${e.message}")
             }
         }

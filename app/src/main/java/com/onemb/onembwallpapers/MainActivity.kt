@@ -9,8 +9,11 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
@@ -20,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.onemb.onembwallpapers.composable.LandingNavigation
 import com.onemb.onembwallpapers.ui.theme.ONEMBWallpapersTheme
@@ -32,6 +37,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        var keepSplashScreen = true
+        installSplashScreen().setKeepOnScreenCondition(condition = { keepSplashScreen })
         setContent {
             ONEMBWallpapersTheme {
                 Surface(
@@ -40,9 +47,12 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val viewModel: WallpaperViewModel = viewModel()
                     val isLoading = viewModel.isLoading.collectAsState(initial = false).value
+                    viewModel.loadLocalJson(this)
+                    val isCategoriesSelected: Boolean = viewModel.getSelectedCollection(this, this.getString(R.string.app_collection_key)).isNotEmpty()
 
-                    LandingNavigation(viewModel)
+                    LandingNavigation(viewModel, isCategoriesSelected)
 
+                    keepSplashScreen = false
                     if(isLoading) {
                         Surface(
                             color = Color.Transparent,
@@ -54,11 +64,12 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(
-                                    color = Color.White,
+                                LinearProgressIndicator(
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                     modifier = Modifier
-                                        .align(Alignment.Center).size(200.dp),
-                                    strokeWidth = 4.dp
+                                        .align(Alignment.Center).fillMaxWidth(0.8f),
+//                                    strokeWidth = 4.dp,
                                 )
                             }
                         }

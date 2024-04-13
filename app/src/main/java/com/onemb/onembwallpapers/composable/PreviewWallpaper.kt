@@ -32,26 +32,10 @@ fun WallpaperPreview(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val callbackComplete = remember{ mutableStateOf(false) }
-
-    val listener = object : WallpaperSetListener {
-        override suspend fun onWallpaperSet() {
-            callbackComplete.value = true
-        }
-
-        override suspend fun onWallpaperSetError(error: Throwable) {
-            callbackComplete.value = true
-        }
-    }
 
 
     LaunchedEffect (null){
-        callbackComplete.value = false
         viewModel.setLoading(false)
-    }
-
-    if(callbackComplete.value) {
-//        onNavigateBack()
     }
 
     Box {
@@ -85,8 +69,7 @@ fun WallpaperPreview(
                             }
                             viewModel.setWallpaper(
                                 viewModel.getWallpaperBitmap()!!,
-                                context,
-                                listener
+                                context
                             )
                         }
 

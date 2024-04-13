@@ -11,16 +11,10 @@ import androidx.navigation.navigation
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 
 @Composable
-fun LandingNavigation(viewModel: WallpaperViewModel) {
+fun LandingNavigation(viewModel: WallpaperViewModel, isCategoriesSelected: Boolean) {
     val navController = rememberNavController()
-    val context = LocalContext.current
 
-
-    LaunchedEffect(null) {
-        viewModel.loadLocalJson(context)
-    }
-
-    NavHost(navController = navController, startDestination = "Categories") {
+    NavHost(navController = navController, startDestination = if(isCategoriesSelected) "Home" else "Categories") {
         composable("Categories") {
             WallpaperCategory(
                 onNavigateToHome = { navController.navigate("Home") },
