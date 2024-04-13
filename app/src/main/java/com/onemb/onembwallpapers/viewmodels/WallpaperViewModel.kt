@@ -105,6 +105,7 @@ class WallpaperViewModel : ViewModel() {
                     val wallpaper = Wallpaper(fileName, fileUrl)
                     wallpapersList.add(wallpaper)
                 }
+                wallpapersList.shuffle()
 
                 // Add wallpapers list to the result
                 fileList.add(Wallpapers(mapOf(folderName to wallpapersList)))

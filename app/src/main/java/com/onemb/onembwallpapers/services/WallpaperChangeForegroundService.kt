@@ -44,7 +44,7 @@ class WallpaperChangeForegroundService : Service() {
 
     private var collections: List<String> = emptyList()
 
-    val generatedNumbers = mutableSetOf<Int>()
+    private val generatedNumbers = mutableSetOf<Int>()
 
 
     companion object {
@@ -182,7 +182,7 @@ class WallpaperChangeForegroundService : Service() {
         return selectedCollectionSet?.toList() ?: emptyList()
     }
 
-    fun generateUniqueRandomNumber(generatedNumbers: MutableSet<Int>, maxValue: Int): Int {
+    private fun generateUniqueRandomNumber(generatedNumbers: MutableSet<Int>, maxValue: Int): Int {
         while (true) {
             val randomNumber = Random.nextInt(maxValue)
             if (randomNumber !in generatedNumbers) {
@@ -194,19 +194,21 @@ class WallpaperChangeForegroundService : Service() {
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun startWallpaperSetProcess(wallpapers: List<Wallpapers>?, context: Context) {
-        val randomIndex = generateUniqueRandomNumber(generatedNumbers, wallpapers?.size!!)
-        Log.d("SIZEWALLPAPER", randomIndex.toString())
+        val deepClonedWallpapers = wallpapers?.map { it.deepCopy() }
+
+        val randomIndex = generateUniqueRandomNumber(generatedNumbers, deepClonedWallpapers?.size!!)
 
         val combinedDataList = mutableListOf<Wallpaper>()
         val keys = getSelectedCollection(context, context.getString(R.string.app_collection_key))
 
         for (key in keys) {
-            val index = wallpapers.indexOfFirst { wallpaperKey ->  wallpaperKey.wallpapers.containsKey(key)}!!
-            val dataForCurrentKey = wallpapers[index].wallpapers[key]
+            val index = deepClonedWallpapers.indexOfFirst { wallpaperKey ->  wallpaperKey.wallpapers.containsKey(key)}
+            val dataForCurrentKey = deepClonedWallpapers[index].wallpapers[key]
             if (dataForCurrentKey != null) {
                 combinedDataList.addAll(dataForCurrentKey)
             }
         }
+        combinedDataList.shuffle()
         val bitmap = combinedDataList[randomIndex].url
         GlobalScope.launch(Dispatchers.Main) {
             try {

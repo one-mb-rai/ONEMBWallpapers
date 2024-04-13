@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -28,6 +30,7 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -65,6 +68,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
     val combinedDataList = mutableListOf<Wallpaper>()
     val keys = viewModel.getSelectedCollection(context, context.getString(R.string.app_collection_key))
     val serviceRunning = remember{ mutableStateOf(false) }
+
     for (key in keys) {
         val index = wallpapersState.value?.indexOfFirst { wallpaperKey ->  wallpaperKey.wallpapers.containsKey(key)}!!
         val dataForCurrentKey = wallpapersState.value?.get(index)?.wallpapers?.get(key)
@@ -74,7 +78,6 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
     }
     val navigatedPreview = viewModel.navigatedPreview.collectAsState(initial = false).value
 
-
     LaunchedEffect(null) {
         if(viewModel.isForegroundServiceRunning(context)) {
             serviceRunning.value = true
@@ -83,7 +86,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary,
@@ -94,7 +97,17 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
-                }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        viewModel.loadLocalJson(context)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                },
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -133,7 +146,7 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                 columns = GridCells.Fixed(3),
                 modifier = Modifier.padding(innerPadding)
             ) {
-                itemsIndexed(combinedDataList) { index, _ ->
+                items(combinedDataList.size) { index ->
                     if (index == 0) {
                         Box(
                             modifier = Modifier
