@@ -1,6 +1,7 @@
 package com.onemb.onembwallpapers.composable
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
@@ -8,13 +9,25 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -28,6 +41,7 @@ import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("RestrictedApi", "StateFlowValueCalledInComposition")
 @Composable
 fun WallpaperPreview(
@@ -37,6 +51,10 @@ fun WallpaperPreview(
 ) {
     val context = LocalContext.current
     val hasPreViewPopped = remember { mutableStateOf(false) }
+
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect (null){
         Log.d("PreviewPage", navController.currentBackStack.value.toString())
@@ -57,6 +75,57 @@ fun WallpaperPreview(
         ) {
             val state = rememberScrollState()
 
+            if (showBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = {
+                        showBottomSheet = false
+                    },
+                    sheetState = sheetState
+                ) {
+                    Column {
+                        TextButton(
+                            onClick = {
+                                callSetWallpaperFunction(viewModel, context, "home")
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showBottomSheet = false
+                                    }
+                                }
+                            }) {
+                            Icon(imageVector = Icons.Filled.Home, contentDescription = "")
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Home screen")
+                        }
+                        TextButton(
+                            onClick = {
+                                callSetWallpaperFunction(viewModel, context, "lockScreen")
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showBottomSheet = false
+                                    }
+                                }
+                            }) {
+                            Icon(imageVector = Icons.Filled.Lock, contentDescription = "")
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Lock screen ")
+                        }
+                        TextButton(
+                            onClick = {
+                                callSetWallpaperFunction(viewModel, context, "both")
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showBottomSheet = false
+                                    }
+                                }
+                        }) {
+                            Icon(imageVector = Icons.Filled.Star, contentDescription = "")
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Home screen and lock screen")
+                        }
+                    }
+                }
+            }
+
             Box(
                 Modifier
                     .fillMaxSize()
@@ -70,19 +139,7 @@ fun WallpaperPreview(
                 )
                 Button(
                     onClick = {
-                        viewModel.viewModelScope.launch {
-                            if(viewModel.isForegroundServiceRunning(context)) {
-                                val serviceIntent = Intent(
-                                    context,
-                                    WallpaperChangeForegroundService::class.java
-                                )
-                                context.stopService(serviceIntent)
-                            }
-                            viewModel.setWallpaper(
-                                viewModel.getWallpaperBitmap()!!,
-                                context
-                            )
-                        }
+                        showBottomSheet = true
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -93,5 +150,22 @@ fun WallpaperPreview(
                 }
             }
         }
+    }
+}
+
+fun callSetWallpaperFunction(viewModel: WallpaperViewModel, context: Context, setOn: String) {
+    viewModel.viewModelScope.launch {
+        if(viewModel.isForegroundServiceRunning(context)) {
+            val serviceIntent = Intent(
+                context,
+                WallpaperChangeForegroundService::class.java
+            )
+            context.stopService(serviceIntent)
+        }
+        viewModel.setWallpaper(
+            viewModel.getWallpaperBitmap()!!,
+            context,
+            setOn
+        )
     }
 }

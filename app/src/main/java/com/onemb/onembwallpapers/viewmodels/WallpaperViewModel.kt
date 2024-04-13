@@ -218,13 +218,19 @@ class WallpaperViewModel : ViewModel() {
         return false
     }
 
-    suspend fun setWallpaper(bitmap: Bitmap, context: Context) {
+    suspend fun setWallpaper(bitmap: Bitmap, context: Context, setOn: String) {
         withContext(Dispatchers.IO) {
             val wallpaperManager = WallpaperManager.getInstance(context)
             try {
                 setLoading(true)
-                wallpaperManager.setBitmap(bitmap)
-                wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                when(setOn) {
+                    "home" -> wallpaperManager.setBitmap(bitmap)
+                    "lockScreen" -> wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                    "both" -> {
+                        wallpaperManager.setBitmap(bitmap)
+                        wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                    }
+                }
                 setLoading(false)
                 wallpaperSet(true)
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")

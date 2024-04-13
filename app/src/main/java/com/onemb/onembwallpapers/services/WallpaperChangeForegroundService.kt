@@ -44,6 +44,9 @@ class WallpaperChangeForegroundService : Service() {
 
     private var collections: List<String> = emptyList()
 
+    val generatedNumbers = mutableSetOf<Int>()
+
+
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "ScreenUnlockServiceChannel"
         private const val NOTIFICATION_ID = 1
@@ -179,10 +182,20 @@ class WallpaperChangeForegroundService : Service() {
         return selectedCollectionSet?.toList() ?: emptyList()
     }
 
+    fun generateUniqueRandomNumber(generatedNumbers: MutableSet<Int>, maxValue: Int): Int {
+        while (true) {
+            val randomNumber = Random.nextInt(maxValue)
+            if (randomNumber !in generatedNumbers) {
+                generatedNumbers.add(randomNumber)
+                return randomNumber
+            }
+        }
+    }
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun startWallpaperSetProcess(wallpapers: List<Wallpapers>?, context: Context) {
-        val randomIndex = Random.nextInt(1, wallpapers?.size!! - 2)
+        val randomIndex = generateUniqueRandomNumber(generatedNumbers, wallpapers?.size!!)
+        Log.d("SIZEWALLPAPER", randomIndex.toString())
 
         val combinedDataList = mutableListOf<Wallpaper>()
         val keys = getSelectedCollection(context, context.getString(R.string.app_collection_key))

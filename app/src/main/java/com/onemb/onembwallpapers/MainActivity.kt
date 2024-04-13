@@ -45,29 +45,27 @@ class MainActivity : ComponentActivity() {
                     val isLoading = viewModel.isLoading.collectAsState(initial = false).value
                     viewModel.loadLocalJson(this)
                     val isCategoriesSelected: Boolean = viewModel.getSelectedCollection(this, this.getString(R.string.app_collection_key)).isNotEmpty()
-                    Box {
-                        LandingNavigation(viewModel, isCategoriesSelected)
+                    LandingNavigation(viewModel, isCategoriesSelected)
 
-                        keepSplashScreen = false
-                        if (isLoading) {
-                            Surface(
-                                color = Color.Transparent,
+                    keepSplashScreen = false
+                    if (isLoading) {
+                        Surface(
+                            color = Color.Transparent,
+                            modifier = Modifier.fillMaxSize(),
+                            tonalElevation = 16.dp,
+                            shadowElevation = 16.dp,
+                        ) {
+                            Box(
                                 modifier = Modifier.fillMaxSize(),
-                                tonalElevation = 16.dp,
-                                shadowElevation = 16.dp,
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                                        modifier = Modifier
-                                            .align(Alignment.Center).fillMaxWidth(0.8f),
-                                        strokeWidth = 4.dp,
-                                    )
-                                }
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    modifier = Modifier
+                                        .align(Alignment.Center).fillMaxWidth(0.7f),
+                                    strokeWidth = 4.dp,
+                                )
                             }
                         }
                     }

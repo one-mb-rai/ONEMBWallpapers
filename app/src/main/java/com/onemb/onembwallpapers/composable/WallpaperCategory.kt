@@ -4,11 +4,13 @@ import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -67,7 +70,7 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = {
                     viewModel.saveSelectedCollection(context, selectedCollection, context.getString(R.string.app_collection_key))
                     if(viewModel.isForegroundServiceRunning(context)) {
@@ -86,6 +89,8 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
                     contentDescription = "Done icon",
                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                 )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Save preferences")
             }
         }
     ) { innerPadding ->
