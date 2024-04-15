@@ -1,5 +1,6 @@
 package com.onemb.onembwallpapers.services
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -12,7 +13,19 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.IBinder
 import android.util.Log
+import android.widget.RemoteViews
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -22,6 +35,7 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import com.onemb.onembwallpapers.MainActivity
 import com.onemb.onembwallpapers.R
+import com.onemb.onembwallpapers.receivers.ONEMBReceiver
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -66,7 +80,6 @@ class WallpaperChangeForegroundService : Service() {
      */
     override fun onCreate() {
         super.onCreate()
-
         startForegroundService()
     }
 
@@ -82,6 +95,7 @@ class WallpaperChangeForegroundService : Service() {
      * Starts the service in the foreground, creates a notification channel, and
      * displays a notification with low priority.
      */
+    @SuppressLint("MissingPermission", "LaunchActivityFromNotification")
     private fun startForegroundService() {
         createNotificationChannel()
         val notificationIntent = Intent(this, MainActivity::class.java)
@@ -92,6 +106,15 @@ class WallpaperChangeForegroundService : Service() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
+        val intent = Intent(this, ONEMBReceiver::class.java)
+        intent.action = "ACTION_STOP_SERVICE"
+        val pendingIntentStopService = PendingIntent.getBroadcast(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Wallpaper change service")
             .setContentText("Service is running with minimal power")
@@ -99,7 +122,15 @@ class WallpaperChangeForegroundService : Service() {
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setSound(null).setVibrate(longArrayOf(0))
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .addAction(
+                R.drawable.baseline_stop_24,
+                "Stop Service",
+                pendingIntentStopService
+            )
             .build()
+
 
         // Check for notification permission before notifying
         if (ActivityCompat.checkSelfPermission(
