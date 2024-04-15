@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,21 +40,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.onemb.onembwallpapers.R
+import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun OnboardingScreen() {
+fun OnboardingScreen(viewModel: WallpaperViewModel) {
     val scope = rememberCoroutineScope()
     val pageState = rememberPagerState(0, pageCount = { 4 })
+    val context = LocalContext.current
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -67,7 +73,7 @@ fun OnboardingScreen() {
             IconButton(onClick = {}, modifier = Modifier.align(Alignment.CenterStart)) {
                 Icon(imageVector = Icons.Outlined.KeyboardArrowLeft, contentDescription = null, tint = Color.Black)
             }
-            if(pageState.currentPage + 1 != 3) {
+            if(pageState.currentPage + 1 != 4) {
                 TextButton(
                     onClick = {},
                     modifier = Modifier.align(Alignment.CenterEnd),
@@ -92,9 +98,12 @@ fun OnboardingScreen() {
             }
         }
 
-        BottomSection(size = 3, index = pageState.currentPage) {
-            if (pageState.currentPage + 1 < 3) scope.launch {
+        BottomSection(size = 4, index = pageState.currentPage) {
+            if (pageState.currentPage + 1 < 4) scope.launch {
                 pageState.scrollToPage(pageState.currentPage + 1)
+            } else {
+                viewModel.getSharedPreferences(context).edit().putBoolean("onboardingDone", true).apply()
+                viewModel.setOnboarding(true)
             }
         }
     }
@@ -109,13 +118,18 @@ fun BottomSection(size: Int, index: Int, onButtonClick: () -> Unit) {
     ) {
         Indicators(size, index)
 
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             onClick = { onButtonClick() },
             containerColor = Color.Black,
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .clip(RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp))
         ) {
+            if(index + 1 != 4) {
+                Text(text = "Next", color = Color.White)
+            } else {
+                Text(text = "Finish", color = Color.White)
+            }
             Icon(
                 Icons.Outlined.KeyboardArrowRight,
                 tint = Color.White,
@@ -159,7 +173,7 @@ fun Indicator(isSelected: Boolean) {
 @Composable
 fun headerForPages() {
     Text(
-        text = "Welcome to ONEMB Wallpapers app",
+        text = "Welcome to ONEMB Wallpapers",
         fontStyle = FontStyle.Normal,
         fontWeight = FontWeight.W900,
         fontFamily = FontFamily.Monospace,
@@ -178,7 +192,9 @@ fun FirstPage() {
         Image(
             painter = painterResource(id = R.drawable.list_of_categories),
             contentDescription = "List of Categories image",
-            modifier = Modifier.height(200.dp)
+            modifier = Modifier
+                .height(200.dp)
+                .fillMaxWidth()
         )
         Text(
             text = "Choose from a variety of wallpaper categories",
@@ -190,7 +206,9 @@ fun FirstPage() {
         Image(
             painter = painterResource(id = R.drawable.save_cat_btn),
             contentDescription = "Save button image",
-            modifier = Modifier.height(100.dp)
+            modifier = Modifier
+                .height(100.dp)
+                .fillMaxWidth()
         )
         Text(
             text = "Clicking on this button will save you choices",
@@ -211,7 +229,9 @@ fun SecondPage() {
         Image(
             painter = painterResource(id = R.drawable.wallpaper_select),
             contentDescription = "Wallpaper selection screen",
-            modifier = Modifier.height(200.dp)
+            modifier = Modifier
+                .height(200.dp)
+                .fillMaxWidth()
         )
         Text(
             text = "This screen shows you a wide variety of fresh wallpapers each time you open app",
@@ -223,7 +243,9 @@ fun SecondPage() {
         Image(
             painter = painterResource(id = R.drawable.refresh_btn),
             contentDescription = "Save button image",
-            modifier = Modifier.height(100.dp)
+            modifier = Modifier
+                .height(100.dp)
+                .fillMaxWidth()
         )
         Text(
             text = "Clicking the refresh button will load a fresh set of wallpapers",
@@ -235,7 +257,9 @@ fun SecondPage() {
         Image(
             painter = painterResource(id = R.drawable.back_cat_btn),
             contentDescription = "Save button image",
-            modifier = Modifier.height(100.dp)
+            modifier = Modifier
+                .height(100.dp)
+                .fillMaxWidth()
         )
         Text(
             text = "You can always go back and update your categories selection",
@@ -256,7 +280,9 @@ fun ThirdPage() {
         Image(
             painter = painterResource(id = R.drawable.change_wall),
             contentDescription = "Change Wall every 30 mins",
-            modifier = Modifier.height(200.dp)
+            modifier = Modifier
+                .height(120.dp)
+                .fillMaxWidth()
         )
         Text(
             text = "This option requires special notification permission.",
@@ -268,11 +294,28 @@ fun ThirdPage() {
         Image(
             painter = painterResource(id = R.drawable.permission_screen),
             contentDescription = "Save button image",
-            modifier = Modifier.height(100.dp)
+            modifier = Modifier
+                .height(80.dp)
+                .fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Notification permission allows the app to always be in foreground. This will help app to change wallpaper every 30 minutes",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.W200,
+            fontFamily = FontFamily.SansSerif,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Image(
+            painter = painterResource(id = R.drawable.notification),
+            contentDescription = "Save button image",
+            modifier = Modifier
+                .height(80.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "You can stop the service anytime you want. This will stop the auto wallpaper change",
             fontStyle = FontStyle.Normal,
             fontWeight = FontWeight.W200,
             fontFamily = FontFamily.SansSerif,
@@ -282,5 +325,106 @@ fun ThirdPage() {
 
 @Composable
 fun FourthPage() {
-
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Disclaimer!",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.ExtraBold,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(6f, type = TextUnitType.Em)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "This app uses foreground service to change wallpaper every 30 minutes",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.Light,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Left,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Foreground service will consume battery and phone resources.",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.Light,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Left,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "User is allowed to stop the service from the notification itself any time they want",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.Light,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Left,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "If you don't use the service then you don't need to worry about this disclaimer ",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.Light,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Left,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Thank you",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.ExtraBold,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Justify,
+            letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
+            fontSize = TextUnit(6f, type = TextUnitType.Em)
+        )
+        Text(
+            text = "for using my app.",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.ExtraBold,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Justify,
+            letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
+            fontSize = TextUnit(6f, type = TextUnitType.Em)
+        )
+        Text(
+            text = "It takes a lot of",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.ExtraBold,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Justify,
+            letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
+            fontSize = TextUnit(6f, type = TextUnitType.Em)
+        )
+        Text(
+            text = "effort in",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.ExtraBold,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Justify,
+            letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
+            fontSize = TextUnit(6f, type = TextUnitType.Em)
+        )
+        Text(
+            text = "development",
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.ExtraBold,
+            fontFamily = FontFamily.Serif,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Justify,
+            letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
+            fontSize = TextUnit(6f, type = TextUnitType.Em)
+        )
+    }
 }

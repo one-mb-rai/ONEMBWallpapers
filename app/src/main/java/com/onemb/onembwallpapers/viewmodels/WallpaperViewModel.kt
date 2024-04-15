@@ -61,6 +61,13 @@ class WallpaperViewModel : ViewModel() {
     private val _navigatedPreview = MutableStateFlow(false)
     val navigatedPreview: Flow<Boolean> = _navigatedPreview
 
+    private val _onboardingDone = MutableStateFlow(false)
+    val onboardingDone: Flow<Boolean> = _onboardingDone
+
+
+    fun setOnboarding(value: Boolean) {
+        _onboardingDone.value = value
+    }
 
     fun setLoading(value: Boolean) {
         _isLoading.value = value
@@ -124,7 +131,7 @@ class WallpaperViewModel : ViewModel() {
     }
 
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
+    fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("ONEMBCollectionPreferences", Context.MODE_PRIVATE)
     }
 

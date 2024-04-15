@@ -77,8 +77,12 @@ class MainActivity : ComponentActivity() {
                         val hasEffectRun = rememberSaveable { mutableStateOf(false) }
 
                         val viewModel: WallpaperViewModel = viewModel()
+                        val preferences = viewModel.getSharedPreferences(this@MainActivity)
                         val wallpapersState = viewModel.wallpapers.observeAsState()
                         val isLoading = viewModel.isLoading.collectAsState(initial = false).value
+                        val isOnboardingDone = viewModel.onboardingDone.collectAsState(initial = false)
+
+                        viewModel.setOnboarding(preferences.getBoolean("onboardingDone", false))
                         LaunchedEffect(Unit) {
                             if (!hasEffectRun.value) {
                                 viewModel.loadLocalJson(context)
@@ -118,8 +122,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        if (!checkPermission()) {
-//                            OnboardingScreen()
+                        if (!isOnboardingDone.value) {
+                            OnboardingScreen(viewModel)
                         }
 
                     }
@@ -128,7 +132,7 @@ class MainActivity : ComponentActivity() {
         }
 
         if (!checkPermission()) {
-            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+//            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
