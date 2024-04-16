@@ -1,5 +1,6 @@
 package com.onemb.onembwallpapers.services
 import android.Manifest
+import android.Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,11 +11,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.widget.RemoteViews
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -95,6 +99,7 @@ class WallpaperChangeForegroundService : Service() {
      * Starts the service in the foreground, creates a notification channel, and
      * displays a notification with low priority.
      */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @SuppressLint("MissingPermission", "LaunchActivityFromNotification")
     private fun startForegroundService() {
         createNotificationChannel()
@@ -142,7 +147,7 @@ class WallpaperChangeForegroundService : Service() {
         }
 
         NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, notification)
-        startForeground(NOTIFICATION_ID, notification)
+        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         startFunction(this)
         isServiceRunning = true
     }

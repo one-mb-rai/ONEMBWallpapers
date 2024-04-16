@@ -1,7 +1,6 @@
 package com.onemb.onembwallpapers.composable
 
 import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,7 +37,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -158,10 +156,16 @@ fun WallpaperApp(
                     onDismissRequest = { openAlertDialog.value = false },
                     onConfirmation = {
                         openAlertDialog.value = false
-                        println("Confirmation registered") // Add logic here to handle confirmation.
+                        requestPermission()
                     },
-                    dialogTitle = "Alert dialog example",
-                    dialogText = "This is an example of an alert dialog with buttons.",
+                    dialogTitle = "Foreground Service permission request",
+                    dialogText = {
+                        Column {
+                            Text(text = "This app requires Notifications permission to run this service.")
+                            Text(text = "A permanent notification will be visible in notification drawer.")
+                            Text(text = "Do you want to continue")
+                        }
+                    },
                     icon = Icons.Default.Info
                 )
             }
@@ -217,7 +221,7 @@ fun WallpaperApp(
                                             }
                                         }
                                     } else {
-                                        requestPermission()
+                                        openAlertDialog.value = true
                                     }
                                 }
                         ) {
@@ -287,7 +291,7 @@ fun PermissionDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
     dialogTitle: String,
-    dialogText: String,
+    dialogText: @Composable () -> Unit,
     icon: ImageVector,
 ) {
     AlertDialog(
@@ -298,7 +302,7 @@ fun PermissionDialog(
             Text(text = dialogTitle)
         },
         text = {
-            Text(text = dialogText)
+            dialogText()
         },
         onDismissRequest = {
             onDismissRequest()

@@ -158,6 +158,7 @@ fun headerForPages() {
         fontStyle = FontStyle.Normal,
         fontWeight = FontWeight.W900,
         fontFamily = FontFamily.Monospace,
+        color = MaterialTheme.colorScheme.onPrimary
     )
 }
 
@@ -180,8 +181,9 @@ fun FirstPage() {
         Text(
             text = "Choose from a variety of wallpaper categories",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Image(
@@ -194,8 +196,9 @@ fun FirstPage() {
         Text(
             text = "Clicking on this button will save you choices",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
@@ -217,8 +220,9 @@ fun SecondPage() {
         Text(
             text = "This screen shows you a wide variety of fresh wallpapers each time you open app",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Image(
@@ -231,8 +235,9 @@ fun SecondPage() {
         Text(
             text = "Clicking the refresh button will load a fresh set of wallpapers",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Image(
@@ -245,8 +250,9 @@ fun SecondPage() {
         Text(
             text = "You can always go back and update your categories selection",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
@@ -268,8 +274,9 @@ fun ThirdPage() {
         Text(
             text = "This option requires special notification permission.",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Image(
@@ -283,8 +290,9 @@ fun ThirdPage() {
         Text(
             text = "Notification permission allows the app to always be in foreground. This will help app to change wallpaper every 30 minutes",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Image(
@@ -298,8 +306,9 @@ fun ThirdPage() {
         Text(
             text = "You can stop the service anytime you want. This will stop the auto wallpaper change",
             fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W200,
+            fontWeight = FontWeight.W300,
             fontFamily = FontFamily.SansSerif,
+            color = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
@@ -318,7 +327,8 @@ fun FourthPage() {
             fontFamily = FontFamily.Serif,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
-            fontSize = TextUnit(6f, type = TextUnitType.Em)
+            fontSize = TextUnit(6f, type = TextUnitType.Em),
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -328,6 +338,7 @@ fun FourthPage() {
             fontFamily = FontFamily.Serif,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Left,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -337,6 +348,7 @@ fun FourthPage() {
             fontFamily = FontFamily.Serif,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Left,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -346,6 +358,7 @@ fun FourthPage() {
             fontFamily = FontFamily.Serif,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Left,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -355,6 +368,7 @@ fun FourthPage() {
             fontFamily = FontFamily.Serif,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Left,
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -365,7 +379,8 @@ fun FourthPage() {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Justify,
             letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
-            fontSize = TextUnit(6f, type = TextUnitType.Em)
+            fontSize = TextUnit(6f, type = TextUnitType.Em),
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Text(
             text = "for using my app.",
@@ -375,7 +390,8 @@ fun FourthPage() {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Justify,
             letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
-            fontSize = TextUnit(6f, type = TextUnitType.Em)
+            fontSize = TextUnit(6f, type = TextUnitType.Em),
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Text(
             text = "It takes a lot of",
@@ -385,7 +401,8 @@ fun FourthPage() {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Justify,
             letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
-            fontSize = TextUnit(6f, type = TextUnitType.Em)
+            fontSize = TextUnit(6f, type = TextUnitType.Em),
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Text(
             text = "effort in",
@@ -395,7 +412,8 @@ fun FourthPage() {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Justify,
             letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
-            fontSize = TextUnit(6f, type = TextUnitType.Em)
+            fontSize = TextUnit(6f, type = TextUnitType.Em),
+            color = MaterialTheme.colorScheme.onPrimary
         )
         Text(
             text = "development",
@@ -405,7 +423,8 @@ fun FourthPage() {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Justify,
             letterSpacing = TextUnit(value = 4f, TextUnitType.Sp),
-            fontSize = TextUnit(6f, type = TextUnitType.Em)
+            fontSize = TextUnit(6f, type = TextUnitType.Em),
+            color = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
