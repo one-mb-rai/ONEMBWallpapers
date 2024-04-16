@@ -64,6 +64,14 @@ class WallpaperViewModel : ViewModel() {
     private val _onboardingDone = MutableStateFlow(false)
     val onboardingDone: Flow<Boolean> = _onboardingDone
 
+    private val _serviceRunning = MutableStateFlow(false)
+    val serviceRunning: Flow<Boolean> = _serviceRunning
+
+
+
+    fun setServiceRunning(value:Boolean) {
+        _serviceRunning.value = value
+    }
 
     fun setOnboarding(value: Boolean) {
         _onboardingDone.value = value
@@ -157,9 +165,6 @@ class WallpaperViewModel : ViewModel() {
         sharedPreferences.edit().remove(listName)
     }
 
-    private fun getRandomNumber(): Int {
-        return Random.nextInt(1, 100)
-    }
 
     fun getWallpaperBitmap(): Bitmap? {
         return wallpaperBitmap
@@ -174,7 +179,6 @@ class WallpaperViewModel : ViewModel() {
                 listener.onBitmapSet()
             } catch (e: IOException) {
                 listener.onBitmapSetError(e)
-                Log.e("WallpaperViewModel", "Error loading image bitmap: ${e.message}")
             }
         }
     }
@@ -241,7 +245,6 @@ class WallpaperViewModel : ViewModel() {
                 }
                 setLoading(false)
                 wallpaperSet(true)
-                Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
                 Log.e("WallpaperViewModel", "Error setting wallpaper: ${e.message}")
             }

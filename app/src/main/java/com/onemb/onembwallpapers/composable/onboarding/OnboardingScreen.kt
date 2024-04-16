@@ -65,25 +65,6 @@ fun OnboardingScreen(viewModel: WallpaperViewModel) {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            IconButton(onClick = {}, modifier = Modifier.align(Alignment.CenterStart)) {
-                Icon(imageVector = Icons.Outlined.KeyboardArrowLeft, contentDescription = null, tint = Color.Black)
-            }
-            if(pageState.currentPage + 1 != 4) {
-                TextButton(
-                    onClick = {},
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(text = "Skip", color = Color.Black)
-                }
-            }
-        }
-
         HorizontalPager(
             state = pageState,
             modifier = Modifier

@@ -24,6 +24,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -33,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +46,7 @@ import androidx.navigation.NavController
 import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,9 +55,13 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
     val collectionsState = viewModel.collections.observeAsState()
     var selectedCollection by remember { mutableStateOf(emptyList<String>()) }
     val context = LocalContext.current
-
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -64,7 +72,8 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
                     Text(
                         text = "Wallpaper Category",
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             )
@@ -72,25 +81,37 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    viewModel.saveSelectedCollection(context, selectedCollection, context.getString(R.string.app_collection_key))
-                    if(viewModel.isForegroundServiceRunning(context)) {
-                        Toast.makeText(context, "Wallpaper change service stopped", 1000 * 3).show()
-                        val serviceIntent = Intent(
+                    if(selectedCollection.isNotEmpty()) {
+                        viewModel.saveSelectedCollection(
                             context,
-                            WallpaperChangeForegroundService::class.java
+                            selectedCollection,
+                            context.getString(R.string.app_collection_key)
                         )
-                        context.stopService(serviceIntent)
+                        if (viewModel.isForegroundServiceRunning(context)) {
+                            Toast.makeText(context, "Wallpaper change service stopped", 1000 * 3)
+                                .show()
+                            val serviceIntent = Intent(
+                                context,
+                                WallpaperChangeForegroundService::class.java
+                            )
+                            context.stopService(serviceIntent)
+                        }
+                        navController.navigate("Home")
+                    } else {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Please select at least one category")
+                        }
                     }
-                    navController.navigate("Home")
                 },
             ) {
                 Icon(
                     imageVector = Icons.Filled.Done,
                     contentDescription = "Done icon",
-                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    modifier = Modifier.size(FilterChipDefaults.IconSize),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "Save preferences")
+                Text(text = "Save preferences", color = MaterialTheme.colorScheme.primary)
             }
         }
     ) { innerPadding ->
@@ -121,7 +142,7 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
                             },
                             label = {
                                 Text(
-                                    text = updateCategoryTitleText(collectionsState.value!![index]),
+                                    text = updateCategoryTitleText(collectionsState.value!![index]), color = MaterialTheme.colorScheme.primary,
                                 )
                             },
                             selected = selectedCollection.contains(collectionsState.value!![index]),
@@ -130,7 +151,8 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
                                     Icon(
                                         imageVector = Icons.Filled.Done,
                                         contentDescription = "Done icon",
-                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             } else {

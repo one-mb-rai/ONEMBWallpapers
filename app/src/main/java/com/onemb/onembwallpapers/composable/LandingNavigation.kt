@@ -1,17 +1,18 @@
 package com.onemb.onembwallpapers.composable
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navigation
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 
 @Composable
-fun LandingNavigation(viewModel: WallpaperViewModel, isCategoriesSelected: Boolean) {
+fun LandingNavigation(
+    viewModel: WallpaperViewModel,
+    isCategoriesSelected: Boolean,
+    checkPermission: Boolean,
+    requestPermission: () -> Unit
+) {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = if(isCategoriesSelected) "Home" else "Categories") {
@@ -24,7 +25,9 @@ fun LandingNavigation(viewModel: WallpaperViewModel, isCategoriesSelected: Boole
         composable("Home") {
             WallpaperApp(
                 navController,
-                viewModel
+                viewModel,
+                checkPermission,
+                requestPermission
             )
 
         }

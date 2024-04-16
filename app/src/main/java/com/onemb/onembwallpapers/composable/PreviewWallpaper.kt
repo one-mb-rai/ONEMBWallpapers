@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -57,7 +58,6 @@ fun WallpaperPreview(
     var showBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect (null){
-        Log.d("PreviewPage", navController.currentBackStack.value.toString())
         viewModel.wallpaperSet(false)
         viewModel.setLoading(false)
         viewModel.setNavigatedPreview(false)
@@ -94,7 +94,7 @@ fun WallpaperPreview(
                             }) {
                             Icon(imageVector = Icons.Filled.Home, contentDescription = "")
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text("Home screen")
+                            Text("Home screen", color = MaterialTheme.colorScheme.primary)
                         }
                         TextButton(
                             onClick = {
@@ -107,7 +107,7 @@ fun WallpaperPreview(
                             }) {
                             Icon(imageVector = Icons.Filled.Lock, contentDescription = "")
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text("Lock screen ")
+                            Text("Lock screen", color = MaterialTheme.colorScheme.primary)
                         }
                         TextButton(
                             onClick = {
@@ -120,7 +120,7 @@ fun WallpaperPreview(
                         }) {
                             Icon(imageVector = Icons.Filled.Star, contentDescription = "")
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text("Home screen and lock screen")
+                            Text("Home screen and lock screen", color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -146,7 +146,7 @@ fun WallpaperPreview(
                         .align(Alignment.BottomCenter)
                         .padding(16.dp)
                 ) {
-                    Text(text = "Set Wallpaper")
+                    Text(text = "Set Wallpaper", color = MaterialTheme.colorScheme.onSecondary)
                 }
             }
         }

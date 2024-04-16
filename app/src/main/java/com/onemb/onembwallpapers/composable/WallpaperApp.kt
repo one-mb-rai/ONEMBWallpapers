@@ -17,10 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
@@ -28,15 +29,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
@@ -44,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +55,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.onemb.onembwallpapers.R
+import com.onemb.onembwallpapers.receivers.ONEMBReceiver
 import com.onemb.onembwallpapers.services.Wallpaper
 import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.viewmodels.BitmapSetListener
@@ -62,12 +65,17 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
+fun WallpaperApp(
+    navController: NavController,
+    viewModel: WallpaperViewModel,
+    checkPermission: Boolean,
+    requestPermission: () -> Unit
+) {
     val context = LocalContext.current
     val wallpapersState = viewModel.wallpapers.observeAsState()
     val combinedDataList = mutableListOf<Wallpaper>()
     val keys = viewModel.getSelectedCollection(context, context.getString(R.string.app_collection_key))
-    val serviceRunning = remember{ mutableStateOf(false) }
+    val serviceRunning = viewModel.serviceRunning.collectAsState(initial = false)
 
     for (key in keys) {
         val index = wallpapersState.value?.indexOfFirst { wallpaperKey ->  wallpaperKey.wallpapers.containsKey(key)}!!
@@ -78,10 +86,11 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
     }
     val navigatedPreview = viewModel.navigatedPreview.collectAsState(initial = false).value
 
-    LaunchedEffect(null) {
+    DisposableEffect(viewModel.isForegroundServiceRunning(context)) {
         if(viewModel.isForegroundServiceRunning(context)) {
-            serviceRunning.value = true
+            viewModel.setServiceRunning(true)
         }
+        onDispose {  }
     }
 
     Scaffold(
@@ -95,7 +104,8 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                     Text(
                         text = "Wallpapers",
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 },
                 actions = {
@@ -104,7 +114,8 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Localized description"
+                            contentDescription = "Localized description",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -120,16 +131,16 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "Category icon",
-                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    modifier = Modifier.size(FilterChipDefaults.IconSize),
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "Back to Category")
+                Text(text = "Back to Category", color = MaterialTheme.colorScheme.primary)
             }
         }
     ) { innerPadding ->
         val listener = object : BitmapSetListener {
             override suspend fun onBitmapSet() {
-                Log.d("APPP", "APPP")
                 if(!navigatedPreview) {
                     viewModel.setNavigatedPreview(true)
                     navController.navigate("Preview")
@@ -140,7 +151,21 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
             }
         }
 
-
+        val openAlertDialog = remember { mutableStateOf(false) }
+        when {
+            openAlertDialog.value -> {
+                PermissionDialog(
+                    onDismissRequest = { openAlertDialog.value = false },
+                    onConfirmation = {
+                        openAlertDialog.value = false
+                        println("Confirmation registered") // Add logic here to handle confirmation.
+                    },
+                    dialogTitle = "Alert dialog example",
+                    dialogText = "This is an example of an alert dialog with buttons.",
+                    icon = Icons.Default.Info
+                )
+            }
+        }
         Box {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -154,38 +179,45 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                 .fillMaxSize()
                                 .height(200.dp)
                                 .clickable {
-                                    if (!serviceRunning.value) {
-                                        viewModel.viewModelScope.launch {
-                                            Toast
-                                                .makeText(
+                                    if (checkPermission) {
+                                        if (!serviceRunning.value) {
+                                            val intent = Intent(context, ONEMBReceiver::class.java)
+                                            intent.action = "START_LOADING"
+                                            context.sendBroadcast(intent)
+                                            viewModel.viewModelScope.launch {
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        "Wallpaper change service starting",
+                                                        1000 * 3
+                                                    )
+                                                    .show()
+                                                val serviceIntent = Intent(
                                                     context,
-                                                    "Wallpaper change service starting",
-                                                    1000 * 3
+                                                    WallpaperChangeForegroundService::class.java
                                                 )
-                                                .show()
-                                            val serviceIntent = Intent(
-                                                context,
-                                                WallpaperChangeForegroundService::class.java
-                                            )
-                                            context.startService(serviceIntent)
-                                            serviceRunning.value = false
+                                                context.startService(serviceIntent)
+                                                viewModel.setServiceRunning(true)
+                                            }
+                                        } else {
+                                            viewModel.viewModelScope.launch {
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        "Wallpaper change service stopping",
+                                                        1000 * 3
+                                                    )
+                                                    .show()
+                                                val serviceIntent = Intent(
+                                                    context,
+                                                    WallpaperChangeForegroundService::class.java
+                                                )
+                                                context.stopService(serviceIntent)
+                                                viewModel.setServiceRunning(false)
+                                            }
                                         }
                                     } else {
-                                        viewModel.viewModelScope.launch {
-                                            Toast
-                                                .makeText(
-                                                    context,
-                                                    "Wallpaper change service stopping",
-                                                    1000 * 3
-                                                )
-                                                .show()
-                                            val serviceIntent = Intent(
-                                                context,
-                                                WallpaperChangeForegroundService::class.java
-                                            )
-                                            context.stopService(serviceIntent)
-                                            serviceRunning.value = false
-                                        }
+                                        requestPermission()
                                     }
                                 }
                         ) {
@@ -205,7 +237,8 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
                                 ) {
                                     Text(
                                         text = if(!serviceRunning.value) "Change every 30 minutes" else "Stop auto wallpaper change",
-                                        fontWeight = FontWeight.Light
+                                        fontWeight = FontWeight.Light,
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
@@ -246,4 +279,47 @@ fun WallpaperApp(navController: NavController, viewModel: WallpaperViewModel) {
 
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PermissionDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmation: () -> Unit,
+    dialogTitle: String,
+    dialogText: String,
+    icon: ImageVector,
+) {
+    AlertDialog(
+        icon = {
+            Icon(icon, contentDescription = "Example Icon")
+        },
+        title = {
+            Text(text = dialogTitle)
+        },
+        text = {
+            Text(text = dialogText)
+        },
+        onDismissRequest = {
+            onDismissRequest()
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmation()
+                }
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text("Dismiss")
+            }
+        }
+    )
 }

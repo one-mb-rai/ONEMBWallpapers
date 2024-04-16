@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,7 +31,7 @@ fun TransparentLoader() {
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier
                     .align(Alignment.Center).size(200.dp),
                 strokeWidth = 4.dp

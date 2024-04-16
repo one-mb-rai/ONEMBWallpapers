@@ -278,6 +278,9 @@ class WallpaperChangeForegroundService : Service() {
                 wallpaperManager.setBitmap(bitmap)
                 wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
                 Toast.makeText(context, "Wallpaper has changed", 1000 * 3).show()
+                val intent = Intent(context, ONEMBReceiver::class.java)
+                intent.action = "STOP_LOADING"
+                context.sendBroadcast(intent)
                 Log.d("WallpaperViewModel", "Wallpaper set successfully")
             } catch (e: IOException) {
                 Log.e("WallpaperViewModel", "Error setting wallpaper: ${e.message}")
