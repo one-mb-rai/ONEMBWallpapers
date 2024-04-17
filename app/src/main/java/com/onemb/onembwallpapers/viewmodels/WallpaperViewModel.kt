@@ -1,7 +1,6 @@
 package com.onemb.onembwallpapers.viewmodels
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.SharedPreferences
@@ -16,12 +15,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
-import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.Wallpaper
-import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.services.Wallpapers
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -32,7 +28,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
-import kotlin.random.Random
 
 interface BitmapSetListener {
     suspend fun onBitmapSet()
@@ -64,14 +59,6 @@ class WallpaperViewModel : ViewModel() {
     private val _onboardingDone = MutableStateFlow(false)
     val onboardingDone: Flow<Boolean> = _onboardingDone
 
-    private val _serviceRunning = MutableStateFlow(false)
-    val serviceRunning: Flow<Boolean> = _serviceRunning
-
-
-
-    fun setServiceRunning(value:Boolean) {
-        _serviceRunning.value = value
-    }
 
     fun setOnboarding(value: Boolean) {
         _onboardingDone.value = value
@@ -218,16 +205,6 @@ class WallpaperViewModel : ViewModel() {
                 null
             }
         }
-    }
-
-    fun isForegroundServiceRunning(context: Context): Boolean {
-        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (WallpaperChangeForegroundService::class.java.name == service.service.className) {
-                return true
-            }
-        }
-        return false
     }
 
     suspend fun setWallpaper(bitmap: Bitmap, context: Context, setOn: String) {

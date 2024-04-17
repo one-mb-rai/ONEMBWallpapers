@@ -9,9 +9,7 @@ import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 @Composable
 fun LandingNavigation(
     viewModel: WallpaperViewModel,
-    isCategoriesSelected: Boolean,
-    checkPermission: Boolean,
-    requestPermission: () -> Unit
+    isCategoriesSelected: Boolean
 ) {
     val navController = rememberNavController()
 
@@ -25,9 +23,7 @@ fun LandingNavigation(
         composable("Home") {
             WallpaperApp(
                 navController,
-                viewModel,
-                checkPermission,
-                requestPermission
+                viewModel
             )
 
         }

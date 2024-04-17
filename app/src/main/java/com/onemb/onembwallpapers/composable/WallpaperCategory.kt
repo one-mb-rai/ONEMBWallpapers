@@ -20,7 +20,6 @@ import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,12 +38,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.onemb.onembwallpapers.R
-import com.onemb.onembwallpapers.services.WallpaperChangeForegroundService
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 import kotlinx.coroutines.launch
 
@@ -87,15 +84,7 @@ fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewMode
                             selectedCollection,
                             context.getString(R.string.app_collection_key)
                         )
-                        if (viewModel.isForegroundServiceRunning(context)) {
-                            Toast.makeText(context, "Wallpaper change service stopped", 1000 * 3)
-                                .show()
-                            val serviceIntent = Intent(
-                                context,
-                                WallpaperChangeForegroundService::class.java
-                            )
-                            context.stopService(serviceIntent)
-                        }
+
                         navController.navigate("Home")
                     } else {
                         scope.launch {

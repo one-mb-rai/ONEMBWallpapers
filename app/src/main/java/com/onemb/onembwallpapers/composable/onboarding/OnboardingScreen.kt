@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnboardingScreen(viewModel: WallpaperViewModel) {
     val scope = rememberCoroutineScope()
-    val pageState = rememberPagerState(0, pageCount = { 4 })
+    val pageState = rememberPagerState(0, pageCount = { 3 })
     val context = LocalContext.current
     Column (
         modifier = Modifier
@@ -75,12 +75,11 @@ fun OnboardingScreen(viewModel: WallpaperViewModel) {
                 0 -> FirstPage()
                 1 -> SecondPage()
                 2 -> ThirdPage()
-                3 -> FourthPage()
             }
         }
 
-        BottomSection(size = 4, index = pageState.currentPage) {
-            if (pageState.currentPage + 1 < 4) scope.launch {
+        BottomSection(size = 3, index = pageState.currentPage) {
+            if (pageState.currentPage + 1 < 3) scope.launch {
                 pageState.scrollToPage(pageState.currentPage + 1)
             } else {
                 viewModel.getSharedPreferences(context).edit().putBoolean("onboardingDone", true).apply()
@@ -152,7 +151,7 @@ fun Indicator(isSelected: Boolean) {
 
 
 @Composable
-fun headerForPages() {
+fun HeaderForPages() {
     Text(
         text = "Welcome to ONEMB Wallpapers",
         fontStyle = FontStyle.Normal,
@@ -169,7 +168,7 @@ fun FirstPage() {
             .fillMaxSize()
             .padding(26.dp)
     ) {
-        headerForPages()
+        HeaderForPages()
         Spacer(modifier = Modifier.height(30.dp))
         Image(
             painter = painterResource(id = R.drawable.list_of_categories),
@@ -259,62 +258,6 @@ fun SecondPage() {
 
 @Composable
 fun ThirdPage() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(26.dp)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.change_wall),
-            contentDescription = "Change Wall every 30 mins",
-            modifier = Modifier
-                .height(120.dp)
-                .fillMaxWidth()
-        )
-        Text(
-            text = "This option requires special notification permission.",
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W300,
-            fontFamily = FontFamily.SansSerif,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Image(
-            painter = painterResource(id = R.drawable.permission_screen),
-            contentDescription = "Save button image",
-            modifier = Modifier
-                .height(80.dp)
-                .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Notification permission allows the app to always be in foreground. This will help app to change wallpaper every 30 minutes",
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W300,
-            fontFamily = FontFamily.SansSerif,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Image(
-            painter = painterResource(id = R.drawable.notification),
-            contentDescription = "Save button image",
-            modifier = Modifier
-                .height(80.dp)
-                .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "You can stop the service anytime you want. This will stop the auto wallpaper change",
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.W300,
-            fontFamily = FontFamily.SansSerif,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-    }
-}
-
-@Composable
-fun FourthPage() {
     Column(
         modifier = Modifier
             .fillMaxSize()

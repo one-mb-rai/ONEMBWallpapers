@@ -1,13 +1,9 @@
 package com.onemb.onembwallpapers
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,26 +22,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.onemb.onembwallpapers.composable.LandingNavigation
 import com.onemb.onembwallpapers.composable.onboarding.OnboardingScreen
-import com.onemb.onembwallpapers.receivers.ONEMBReceiver
 import com.onemb.onembwallpapers.ui.theme.ONEMBWallpapersTheme
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 
 
 class MainActivity : ComponentActivity() {
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            val intent = Intent(this, ONEMBReceiver::class.java)
-            intent.action = "PERMISSION_GRANTED"
-            sendBroadcast(intent)
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,9 +69,7 @@ class MainActivity : ComponentActivity() {
                         ).isNotEmpty()
                         wallpapersState.value.let {
                             if (it?.isNotEmpty() == true) {
-                                LandingNavigation(viewModel, isCategoriesSelected,
-                                    checkPermission()
-                                ) { requestPermission() }
+                                LandingNavigation(viewModel, isCategoriesSelected)
                                 keepSplashScreen = false
                             }
                         }
@@ -123,16 +106,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun requestPermission() {
-        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun checkPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.POST_NOTIFICATIONS
-        ) == PackageManager.PERMISSION_GRANTED
-    }
 }
