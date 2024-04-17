@@ -11,12 +11,12 @@ It allows to change wallpaper for both Home screen and Lock Screen (Currently Go
 
 You can start a service which will keep changing wallpapers every 30 minutes
 
-![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/navendu-pottekkat/awesome-readme?include_prereleases)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/one-mb-rai/ONEMBWallpapers/?include_prereleases)
 
-![GitHub last commit](https://img.shields.io/github/last-commit/navendu-pottekkat/awesome-readme)
+![GitHub last commit](https://img.shields.io/github/last-commit/one-mb-rai/ONEMBWallpapers/)
 
-![GitHub issues](https://img.shields.io/github/issues-raw/navendu-pottekkat/awesome-readme)
+![GitHub issues](https://img.shields.io/github/issues-raw/one-mb-rai/ONEMBWallpapers/)
 
-![GitHub pull requests](https://img.shields.io/github/issues-pr/navendu-pottekkat/awesome-readme)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/one-mb-rai/ONEMBWallpapers/)
 
-![GitHub](https://img.shields.io/github/license/navendu-pottekkat/awesome-readme)
+![GitHub](https://img.shields.io/github/license/one-mb-rai/ONEMBWallpapers/)
