@@ -11,8 +11,8 @@ android {
         applicationId = "com.onemb.onembwallpapers"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 5
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -22,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -81,4 +82,11 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     //noinspection UseTomlInstead
     implementation("com.github.yalantis:ucrop:2.2.8-native")
+    //noinspection UseTomlInstead
+    implementation("androidx.navigation:navigation-dynamic-features-fragment:2.7.7")
+    //noinspection UseTomlInstead
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    //noinspection UseTomlInstead
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
 }
