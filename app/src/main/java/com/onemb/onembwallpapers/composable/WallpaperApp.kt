@@ -35,6 +35,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -52,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.work.WorkManager
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -61,6 +64,7 @@ import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.services.Wallpaper
 import com.onemb.onembwallpapers.services.WallpaperChangeWorker
 import com.onemb.onembwallpapers.utils.ScreenUtils
+import com.onemb.onembwallpapers.utils.ScreenUtils.isWallpaperChangeWorkerEnqueued
 import com.onemb.onembwallpapers.viewmodels.BitmapSetListener
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
 import kotlinx.coroutines.launch
@@ -150,6 +154,12 @@ fun WallpaperApp(
             }
         }
 
+        val isWorkerEnqueued = remember { mutableStateOf(false) }
+
+        LaunchedEffect(null) {
+            isWorkerEnqueued.value = isWallpaperChangeWorkerEnqueued(context)
+        }
+
 
         Box {
             LazyVerticalGrid(
@@ -172,14 +182,15 @@ fun WallpaperApp(
                                 .fillMaxSize()
                                 .height(200.dp)
                                 .clickable {
-                                    if(!ScreenUtils.isWallpaperChangeWorkerEnqueued(context)) {
+                                    if (!isWorkerEnqueued.value) {
                                         viewModel.setLoading(true)
                                         WallpaperChangeWorker.enqueueWallpaperChangeWork(getInstance().applicationContext)
+                                        isWorkerEnqueued.value = true
                                     } else {
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar("Service already running")
-                                        }
+                                        WorkManager.getInstance(context).cancelAllWorkByTag(WallpaperChangeWorker.WORK_TAG);
+                                        isWorkerEnqueued.value = false
                                     }
+
                                 }
                         ) {
                             ElevatedCard(
@@ -197,7 +208,7 @@ fun WallpaperApp(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "Change every 30 minutes",
+                                        text = if(isWorkerEnqueued.value) "Stop Service" else "Change every 30 minutes",
                                         fontWeight = FontWeight.Light,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -227,10 +238,12 @@ fun WallpaperApp(
                                 elevation = CardDefaults.cardElevation(
                                     defaultElevation = 6.dp
                                 ),
-                                modifier = Modifier.fillMaxSize().onGloballyPositioned { coordinates ->
-                                    cardWidth = coordinates.size.width
-                                    cardHeight = coordinates.size.height
-                                }
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .onGloballyPositioned { coordinates ->
+                                        cardWidth = coordinates.size.width
+                                        cardHeight = coordinates.size.height
+                                    }
                             ) {
                                 if(cardWidth > 0 && cardHeight > 0 ) {
                                     val painter = rememberAsyncImagePainter(
