@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.firebase.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -73,7 +74,7 @@ dependencies {
     //noinspection UseTomlInstead
     implementation ("com.squareup.retrofit2:converter-gson:2.10.0")
     //noinspection UseTomlInstead
-    implementation ("androidx.compose.runtime:runtime-livedata:1.6.5")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.6.6")
     //noinspection UseTomlInstead
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     //noinspection UseTomlInstead
@@ -88,5 +89,7 @@ dependencies {
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
     //noinspection UseTomlInstead
     implementation("androidx.core:core-splashscreen:1.0.1")
+    //noinspection UseTomlInstead
+
 
 }
