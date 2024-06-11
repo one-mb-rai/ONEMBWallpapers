@@ -120,6 +120,7 @@ fun WallpaperPreview(
                             Spacer(modifier = Modifier.width(16.dp))
                             Text("Home screen and lock screen", color = MaterialTheme.colorScheme.primary)
                         }
+                        Spacer(modifier = Modifier.height(50.dp))
                     }
                 }
             }

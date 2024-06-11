@@ -17,7 +17,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,11 +32,14 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -92,6 +98,8 @@ fun WallpaperApp(
     var visibleItemCount by remember { mutableStateOf(12) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     Scaffold(
         snackbarHost = {
@@ -160,7 +168,6 @@ fun WallpaperApp(
             isWorkerEnqueued.value = isWallpaperChangeWorkerEnqueued(context)
         }
 
-
         Box {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -176,6 +183,60 @@ fun WallpaperApp(
                     }
 
                     if (index == 0) {
+                        if (showBottomSheet) {
+                            ModalBottomSheet(
+                                onDismissRequest = {
+                                    showBottomSheet = false
+                                },
+                                sheetState = sheetState
+                            ) {
+                                Column {
+                                    TextButton(
+                                        onClick = {
+                                            WallpaperChangeWorker.enqueueWallpaperChangeWork(getInstance().applicationContext, "Home")
+                                            isWorkerEnqueued.value = true
+                                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                                if (!sheetState.isVisible) {
+                                                    showBottomSheet = false
+                                                }
+                                            }
+                                        }) {
+                                        Icon(imageVector = Icons.Filled.Home, contentDescription = "")
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text("Home screen", color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            WallpaperChangeWorker.enqueueWallpaperChangeWork(getInstance().applicationContext, "Lock")
+                                            isWorkerEnqueued.value = true
+                                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                                if (!sheetState.isVisible) {
+                                                    showBottomSheet = false
+                                                }
+                                            }
+                                        }) {
+                                        Icon(imageVector = Icons.Filled.Lock, contentDescription = "")
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text("Lock screen", color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            WallpaperChangeWorker.enqueueWallpaperChangeWork(getInstance().applicationContext, "Both")
+                                            isWorkerEnqueued.value = true
+                                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                                if (!sheetState.isVisible) {
+                                                    showBottomSheet = false
+                                                }
+                                            }
+                                        }) {
+                                        Icon(imageVector = Icons.Filled.Star, contentDescription = "")
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text("Home screen and lock screen", color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    Spacer(modifier = Modifier.height(50.dp))
+                                }
+                            }
+                        }
                         Box(
                             modifier = Modifier
                                 .padding(3.dp)
@@ -183,11 +244,11 @@ fun WallpaperApp(
                                 .height(200.dp)
                                 .clickable {
                                     if (!isWorkerEnqueued.value) {
-                                        viewModel.setLoading(true)
-                                        WallpaperChangeWorker.enqueueWallpaperChangeWork(getInstance().applicationContext)
-                                        isWorkerEnqueued.value = true
+                                        showBottomSheet = true
                                     } else {
-                                        WorkManager.getInstance(context).cancelAllWorkByTag(WallpaperChangeWorker.WORK_TAG);
+                                        WorkManager
+                                            .getInstance(context)
+                                            .cancelAllWorkByTag(WallpaperChangeWorker.WORK_TAG);
                                         isWorkerEnqueued.value = false
                                     }
 

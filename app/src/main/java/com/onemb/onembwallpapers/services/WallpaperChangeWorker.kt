@@ -37,6 +37,8 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
     override fun doWork(): Result {
         return try {
             val context = getInstance().applicationContext
+            val changeAt = inputData.getString("CHANGEAT") ?: "Both"
+
             val inputStream: InputStream = context.assets.open("fileList.json")
             val size = inputStream.available()
             val buffer = ByteArray(size)
@@ -46,7 +48,7 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
 
             // Parse the JSON string
             val jsonObject = JSONObject(json)
-            val wallpapersObject = jsonObject.getJSONObject("wallpapers")
+            val wallpapersObject = jsonObject.getJSONObject("wallpapersArray")
             val fileList = mutableListOf<Wallpapers>()
             val keysList = mutableListOf<String>()
 
@@ -74,9 +76,10 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
             collections = keysList
             // Set the result to LiveData or do whatever you need to do with it
             wallpapers = fileList
-            startWallpaperSetProcess(wallpapers, context)
+            startWallpaperSetProcess(wallpapers, context, changeAt)
             Result.success()
         } catch (e: Exception) {
+            Log.d("Failure", e.toString())
             Result.failure()
         }
     }
@@ -102,7 +105,7 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun startWallpaperSetProcess(wallpapers: List<Wallpapers>?, context: Context) {
+    private fun startWallpaperSetProcess(wallpapers: List<Wallpapers>?, context: Context, changeAt: String) {
         val deepClonedWallpapers = wallpapers?.map { it.deepCopy() }
 
         val randomIndex = generateUniqueRandomNumber(generatedNumbers, deepClonedWallpapers?.size!!)
@@ -122,7 +125,7 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
         GlobalScope.launch(Dispatchers.Main) {
             try {
                 val bitmapFile = loadImageBitmap(bitmap, context)
-                setWallpaperFromService(bitmapFile, context)
+                setWallpaperFromService(bitmapFile, context, changeAt)
             } catch (e: IOException) {
                 Log.e(
                     "WallpaperViewModel",
@@ -149,12 +152,19 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
         }
     }
 
-    private suspend fun setWallpaperFromService(bitmap: Bitmap, context: Context) {
+    private suspend fun setWallpaperFromService(bitmap: Bitmap, context: Context, changeAt: String) {
         withContext(Dispatchers.Main) {
             val wallpaperManager = WallpaperManager.getInstance(context)
+            Log.d("setWallpaperWork","Reached")
             try {
-                wallpaperManager.setBitmap(bitmap)
-                wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                when(changeAt) {
+                    "Home" -> wallpaperManager.setBitmap(bitmap)
+                    "Lock" -> wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                    "Both" -> {
+                        wallpaperManager.setBitmap(bitmap)
+                        wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                    }
+                }
                 val app: ONEMBApplication = getInstance().applicationContext as ONEMBApplication
                 val viewModel: WallpaperViewModel = app.wallpaperViewModel
                 viewModel.setLoading(false)
@@ -170,16 +180,20 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
         private const val WORK_NAME = "WallpaperChangeWorker"
 
         const val WORK_TAG = "ONEMB"
-        fun enqueueWallpaperChangeWork(context: Context) {
+        fun enqueueWallpaperChangeWork(context: Context, changeAt: String) {
             if(!isWallpaperChangeWorkerEnqueued(context)) {
+                val inputData = Data.Builder()
+                    .putString("CHANGEAT", changeAt)
+                    .build()
+
                 val workRequest = PeriodicWorkRequestBuilder<WallpaperChangeWorker>(
                     repeatInterval = 30,
                     repeatIntervalTimeUnit = TimeUnit.MINUTES,
-                ).addTag(WORK_TAG).build()
+                ).setInputData(inputData).addTag(WORK_TAG).build()
 
                 WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                     WORK_NAME,
-                    ExistingPeriodicWorkPolicy.REPLACE,
+                    ExistingPeriodicWorkPolicy.UPDATE,
                     workRequest
                 )
             }

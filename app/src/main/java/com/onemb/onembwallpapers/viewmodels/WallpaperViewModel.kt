@@ -87,7 +87,7 @@ class WallpaperViewModel : ViewModel() {
 
             // Parse the JSON string
             val jsonObject = JSONObject(json)
-            val wallpapersObject = jsonObject.getJSONObject("wallpapers")
+            val wallpapersObject = jsonObject.getJSONObject("wallpapersArray")
             val fileList = mutableListOf<Wallpapers>()
             val keysList = mutableListOf<String>()
 
