@@ -1,5 +1,6 @@
 package com.onemb.onembwallpapers
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -25,6 +27,9 @@ class MainActivity : ComponentActivity() {
         val app: ONEMBApplication = this.applicationContext as ONEMBApplication
         val viewModel: WallpaperViewModel = app.wallpaperViewModel
         var keepSplashScreen = true
+        val preferences = viewModel.getSharedPreferences(app)
+        viewModel.setOnboarding(preferences.getBoolean("onboardingDone", false))
+
         installSplashScreen().setKeepOnScreenCondition(condition = { keepSplashScreen })
         setContent {
             ONEMBWallpapersTheme {
@@ -51,14 +56,17 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (isLoading) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.tertiary,
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            strokeWidth = 6.dp,
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.tertiary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.fillMaxWidth(0.5f),
+                                strokeWidth = 6.dp,
+                            )
+                        }
                     }
 
                     if (!isOnboardingDone) {
