@@ -4,17 +4,21 @@ import android.app.WallpaperManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import androidx.core.graphics.drawable.toBitmap
 import androidx.work.*
 import androidx.work.WorkerParameters
+import coil.Coil
 import coil.ImageLoader
+import coil.imageLoader
 import coil.request.ImageRequest
 import com.onemb.onembwallpapers.ONEMBApplication
 import com.onemb.onembwallpapers.ONEMBApplication.getInstance
 import com.onemb.onembwallpapers.R
 import com.onemb.onembwallpapers.utils.ScreenUtils.isWallpaperChangeWorkerEnqueued
 import com.onemb.onembwallpapers.viewmodels.WallpaperViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -122,7 +126,7 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
         }
         combinedDataList.shuffle()
         val bitmap = combinedDataList[randomIndex].url
-        GlobalScope.launch(Dispatchers.Main) {
+        CoroutineScope(Dispatchers.Main).launch {
             try {
                 val bitmapFile = loadImageBitmap(bitmap, context)
                 setWallpaperFromService(bitmapFile, context, changeAt)
@@ -137,15 +141,15 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
 
     private suspend fun loadImageBitmap(imageUrl: String, context: Context): Bitmap {
         return withContext(Dispatchers.IO) {
-            val imageLoader = ImageLoader.Builder(context)
-                .build()
 
             val request = ImageRequest.Builder(context)
                 .data(imageUrl)
                 .build()
 
             try {
-                imageLoader.execute(request).drawable?.toBitmap() ?: throw IOException("Bitmap is null")
+                val drawable = request.context.imageLoader.execute(request).drawable
+                val bitmap = (drawable as? BitmapDrawable)?.bitmap
+                bitmap ?: throw IOException("Bitmap is null")
             } catch (e: Exception) {
                 throw IOException("Error loading bitmap: ${e.message}")
             }
@@ -158,10 +162,10 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
             Log.d("setWallpaperWork","Reached")
             try {
                 when(changeAt) {
-                    "Home" -> wallpaperManager.setBitmap(bitmap)
+                    "Home" -> wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM)
                     "Lock" -> wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
                     "Both" -> {
-                        wallpaperManager.setBitmap(bitmap)
+                        wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_SYSTEM)
                         wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
                     }
                 }
