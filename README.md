@@ -1,4 +1,4 @@
-![ONEMB Wallpapers app](https://firebasestorage.googleapis.com/v0/b/onemb-wallpapers.appspot.com/o/Banner%20(1).png?alt=media&token=d527b894-03b1-42a3-8403-3e84cd7d7b6a)
+
 
 # ONEMB Wallpaper App
 
