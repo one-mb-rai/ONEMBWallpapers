@@ -1,4 +1,3 @@
-
 ![ONEMB Wallpapers app](https://firebasestorage.googleapis.com/v0/b/onemb-wallpapers.appspot.com/o/Banner%20(1).png?alt=media&token=d527b894-03b1-42a3-8403-3e84cd7d7b6a)
 
 # ONEMB Wallpaper App
@@ -20,3 +19,7 @@ You can start a service which will keep changing wallpapers every 30 minutes
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/one-mb-rai/ONEMBWallpapers)
 
 ![GitHub](https://img.shields.io/github/license/one-mb-rai/ONEMBWallpapers)
+
+![Screenshot_2024-04-12-21-00-08-77_8869465d07e472880ab7df6adc826651](https://github.com/one-mb-rai/ONEMBWallpapers/assets/16004196/1aa8ca1c-dc3d-4eb8-b152-470947652e04)
+![Screenshot_2024-04-12-21-00-03-85_8869465d07e472880ab7df6adc826651](https://github.com/one-mb-rai/ONEMBWallpapers/assets/16004196/dd718b06-7cc2-43ad-ab63-74651eab6562)
+![Screenshot_2024-04-12-20-59-54-59_8869465d07e472880ab7df6adc826651](https://github.com/one-mb-rai/ONEMBWallpapers/assets/16004196/dd37884e-60a6-4025-88a1-38672a515d26)
