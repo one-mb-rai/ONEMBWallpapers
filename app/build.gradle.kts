@@ -73,22 +73,19 @@ dependencies {
     //noinspection UseTomlInstead
     implementation ("com.squareup.retrofit2:converter-gson:2.10.0")
     //noinspection UseTomlInstead
-    implementation ("androidx.compose.runtime:runtime-livedata:1.6.6")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.7.6")
     //noinspection UseTomlInstead
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     //noinspection UseTomlInstead
     implementation("io.coil-kt:coil-compose:2.6.0")
     //noinspection UseTomlInstead
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.navigation:navigation-compose:2.8.5")
     //noinspection UseTomlInstead
     implementation("com.github.yalantis:ucrop:2.2.8-native")
     //noinspection UseTomlInstead
-    implementation("androidx.navigation:navigation-dynamic-features-fragment:2.7.7")
+    implementation("androidx.navigation:navigation-dynamic-features-fragment:2.8.5")
     //noinspection UseTomlInstead
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
     //noinspection UseTomlInstead
     implementation("androidx.core:core-splashscreen:1.0.1")
-    //noinspection UseTomlInstead
-
-
 }
