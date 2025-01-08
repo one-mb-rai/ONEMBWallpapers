@@ -11,8 +11,8 @@ android {
         applicationId = "com.onemb.onembwallpapers"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 5
+        versionName = "1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -22,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,13 +73,19 @@ dependencies {
     //noinspection UseTomlInstead
     implementation ("com.squareup.retrofit2:converter-gson:2.10.0")
     //noinspection UseTomlInstead
-    implementation ("androidx.compose.runtime:runtime-livedata:1.6.5")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.7.6")
     //noinspection UseTomlInstead
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     //noinspection UseTomlInstead
     implementation("io.coil-kt:coil-compose:2.6.0")
     //noinspection UseTomlInstead
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.navigation:navigation-compose:2.8.5")
     //noinspection UseTomlInstead
     implementation("com.github.yalantis:ucrop:2.2.8-native")
+    //noinspection UseTomlInstead
+    implementation("androidx.navigation:navigation-dynamic-features-fragment:2.8.5")
+    //noinspection UseTomlInstead
+    implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
+    //noinspection UseTomlInstead
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }

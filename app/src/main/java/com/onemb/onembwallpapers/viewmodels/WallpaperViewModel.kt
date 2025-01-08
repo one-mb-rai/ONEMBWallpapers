@@ -8,53 +8,123 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
-import com.onemb.onembwallpapers.R
-import com.onemb.onembwallpapers.services.CollectionResponse
-import com.onemb.onembwallpapers.services.PixelsWallpaperService
-import com.onemb.onembwallpapers.services.WallpaperResponse
+import com.onemb.onembwallpapers.services.Wallpaper
+import com.onemb.onembwallpapers.services.Wallpapers
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import kotlin.random.Random
+import java.io.InputStream
+
+interface BitmapSetListener {
+    suspend fun onBitmapSet()
+    fun onBitmapSetError(error: Throwable)
+}
 
 class WallpaperViewModel : ViewModel() {
-    private val retrofit: Retrofit = Retrofit.Builder().
-                             baseUrl("https://api.pexels.com/").
-                             addConverterFactory(GsonConverterFactory.create()).
-                             build();
-    private var service = retrofit.create(PixelsWallpaperService::class.java)
 
-    private val _wallpapers = MutableLiveData<WallpaperResponse?>()
-    val wallpapers: MutableLiveData<WallpaperResponse?> = _wallpapers
+    private val _wallpapers = MutableLiveData<List<Wallpapers>>()
+    val wallpapers: MutableLiveData<List<Wallpapers>> = _wallpapers
 
-    private val _collections = MutableLiveData<CollectionResponse?>()
-    val collections: MutableLiveData<CollectionResponse?> = _collections
+    private val _collections = MutableLiveData<MutableList<String>?>()
+    val collections: MutableLiveData<MutableList<String>?> = _collections
 
-    private val _wallpapersBitmapLoaded = MutableLiveData(false)
-    val wallpapersBitmapLoaded: MutableLiveData<Boolean> = _wallpapersBitmapLoaded
+    private val _selectedCollection = MutableLiveData<List<String>?>()
+    val selectedCollection: MutableLiveData<List<String>?> = _selectedCollection
 
     private var wallpaperBitmap: Bitmap? = null
 
-    init {
-        getWallpapersCategories()
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: Flow<Boolean> = _isLoading
+
+    private val _wallpaperSet = MutableStateFlow(false)
+    val wallpaperSet: Flow<Boolean> = _wallpaperSet
+
+    private val _navigatedPreview = MutableStateFlow(false)
+    val navigatedPreview: Flow<Boolean> = _navigatedPreview
+
+    private val _onboardingDone = MutableStateFlow(false)
+    val onboardingDone: Flow<Boolean> = _onboardingDone
+
+
+    fun setOnboarding(value: Boolean) {
+        _onboardingDone.value = value
     }
+
+    fun setLoading(value: Boolean) {
+        _isLoading.value = value
+    }
+
+    fun setNavigatedPreview(value: Boolean) {
+        _navigatedPreview.value = value
+    }
+
+    fun wallpaperSet(value: Boolean) {
+        _wallpaperSet.value = value
+    }
+
+    fun loadLocalJson(context: Context) {
+        try {
+            val inputStream: InputStream = context.assets.open("fileList.json")
+            val size = inputStream.available()
+            val buffer = ByteArray(size)
+            inputStream.read(buffer)
+            inputStream.close()
+            val json = String(buffer, charset("UTF-8"))
+
+            // Parse the JSON string
+            val jsonObject = JSONObject(json)
+            val wallpapersObject = jsonObject.getJSONObject("wallpapersArray")
+            val fileList = mutableListOf<Wallpapers>()
+            val keysList = mutableListOf<String>()
+
+            // Iterate through each folder
+            val keys = wallpapersObject.keys()
+            while (keys.hasNext()) {
+                val folderName = keys.next()
+                val jsonArray = wallpapersObject.getJSONArray(folderName)
+                keysList.add(folderName)
+
+                // Iterate through wallpapers in the folder
+                val wallpapersList = mutableListOf<Wallpaper>()
+                for (i in 0 until jsonArray.length()) {
+                    val wallpaperObject = jsonArray.getJSONObject(i)
+                    val fileName = wallpaperObject.getString("name")
+                    val fileUrl = wallpaperObject.getString("url")
+                    val wallpaper = Wallpaper(fileName, fileUrl)
+                    wallpapersList.add(wallpaper)
+                }
+                wallpapersList.shuffle()
+
+                // Add wallpapers list to the result
+                fileList.add(Wallpapers(mapOf(folderName to wallpapersList)))
+            }
+
+            _collections.value = keysList
+            // Set the result to LiveData or do whatever you need to do with it
+            _wallpapers.value = fileList
+
+
+        } catch (e: IOException) {
+            e.printStackTrace()
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+    }
+
 
     fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("ONEMBCollectionPreferences", Context.MODE_PRIVATE)
@@ -66,6 +136,7 @@ class WallpaperViewModel : ViewModel() {
         val editor = sharedPreferences.edit()
         editor.putStringSet(listName, selectedCollection.toSet())
         editor.apply()
+        _selectedCollection.value = selectedCollection
     }
 
     // Function to retrieve selectedCollection from SharedPreferences
@@ -81,67 +152,20 @@ class WallpaperViewModel : ViewModel() {
         sharedPreferences.edit().remove(listName)
     }
 
-    private fun getRandomNumber(): Int {
-        return Random.nextInt(1, 100)
-    }
-
-    fun getWallpapersCategories() {
-        val call: Call<CollectionResponse> = service.getCollections()
-
-        call.enqueue(object : Callback<CollectionResponse> {
-            override fun onResponse(call: Call<CollectionResponse>, response: Response<CollectionResponse>) {
-                if (response.isSuccessful) {
-                    val collections: CollectionResponse? = response.body()
-                    _collections.value = collections
-                    Log.d("Response", response.body().toString())
-                } else {
-                    Log.d("HTTP Error", "Failed to fetch collections: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(p0: Call<CollectionResponse>, p1: Throwable) {
-                Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
-            }
-        })
-    }
-
-    fun getWallpapers(context: Context) {
-        val call: Call<WallpaperResponse> = service.getWallpapers(getRandomNumber(), getSelectedCollection(context, context.getString(
-            R.string.app_collection_key)).joinToString(", "))
-
-        call.enqueue(object : Callback<WallpaperResponse> {
-            override fun onResponse(call: Call<WallpaperResponse>, response: Response<WallpaperResponse>) {
-                if (response.isSuccessful) {
-                    val wallpapers: WallpaperResponse? = response.body()
-                    _wallpapers.value = wallpapers
-                    Log.d("Response", wallpapers?.photos?.toString()!!)
-                } else {
-                    Log.d("HTTP Error", "Failed to fetch wallpapers: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(p0: Call<WallpaperResponse>, p1: Throwable) {
-                Log.d("Network Error", "Error fetching wallpapers: ${p1.message}")
-            }
-        })
-    }
 
     fun getWallpaperBitmap(): Bitmap? {
         return wallpaperBitmap
     }
 
-    fun setWallpapersBitmapLoaded(value: Boolean) {
-        _wallpapersBitmapLoaded.value = value
-    }
 
-    fun setWallpaperFromUrl(imageUrl: String, context: Context) {
+    fun setWallpaperFromUrl(imageUrl: String, context: Context, listener: BitmapSetListener) {
         viewModelScope.launch {
             try {
                 val bitmap = loadImageBitmap(imageUrl, context)
                 wallpaperBitmap = bitmap
-                setWallpapersBitmapLoaded(true)
+                listener.onBitmapSet()
             } catch (e: IOException) {
-                Log.e("WallpaperViewModel", "Error loading image bitmap: ${e.message}")
+                listener.onBitmapSetError(e)
             }
         }
     }
@@ -183,16 +207,33 @@ class WallpaperViewModel : ViewModel() {
         }
     }
 
-    suspend fun setWallpaper(bitmap: Bitmap, context: Context) {
+    suspend fun setWallpaper(bitmap: Bitmap, context: Context, setOn: String) {
         withContext(Dispatchers.IO) {
             val wallpaperManager = WallpaperManager.getInstance(context)
             try {
-                wallpaperManager.setBitmap(bitmap)
-                wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
-                Log.d("WallpaperViewModel", "Wallpaper set successfully")
+                setLoading(true)
+                when(setOn) {
+                    "home" -> wallpaperManager.setBitmap(bitmap)
+                    "lockScreen" -> wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                    "both" -> {
+                        wallpaperManager.setBitmap(bitmap)
+                        wallpaperManager.setBitmap(bitmap, null, true, WallpaperManager.FLAG_LOCK)
+                    }
+                }
+                setLoading(false)
+                wallpaperSet(true)
             } catch (e: IOException) {
                 Log.e("WallpaperViewModel", "Error setting wallpaper: ${e.message}")
             }
+        }
+        withContext(Dispatchers.Main) {
+            Toast
+                .makeText(
+                    context,
+                    "Wallpaper change successful",
+                    Toast.LENGTH_LONG
+                )
+                .show()
         }
     }
 
