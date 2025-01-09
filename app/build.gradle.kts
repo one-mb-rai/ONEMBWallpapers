@@ -7,6 +7,13 @@ android {
     namespace = "com.onemb.onembwallpapers"
     compileSdk = 34
 
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+
     defaultConfig {
         applicationId = "com.onemb.onembwallpapers"
         minSdk = 29
