@@ -1,0 +1,7 @@
+It is a wallpaper application for Android Devices
+
+It will present you with several options for categories. Based upon selection you can view wallpaper list.
+
+It allows to change wallpaper for both Home screen and Lock Screen (Currently Google's wallpaper app is unable to do so)
+
+You can start a service which will keep changing wallpapers every 30 minutes
