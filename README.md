@@ -1,5 +1,6 @@
-
 # ONEMB Wallpaper App
+![App Screenshot 1](https://raw.githubusercontent.com/one-mb-rai/ONEMBWallpapers/main/fastlane/metadata/android/en-US/images/featureGraphic.png)
+
 
 It is a wallpaper application for Android Devices
 
