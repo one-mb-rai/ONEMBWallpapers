@@ -17,9 +17,10 @@ android {
     defaultConfig {
         applicationId = "com.onemb.onembwallpapers"
         minSdk = 29
-        targetSdk = 34
-        versionCode = 5
-        versionName = "1.6"
+        //noinspection EditedTargetSdkVersion
+        targetSdk = 35
+        versionCode = 6
+        versionName = "1.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -89,8 +90,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.5")
     //noinspection UseTomlInstead
     implementation("com.github.yalantis:ucrop:2.2.8-native")
-    //noinspection UseTomlInstead
-    implementation("androidx.navigation:navigation-dynamic-features-fragment:2.8.5")
     //noinspection UseTomlInstead
     implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
     //noinspection UseTomlInstead
