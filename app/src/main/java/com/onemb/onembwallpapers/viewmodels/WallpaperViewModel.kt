@@ -10,7 +10,6 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
@@ -19,6 +18,7 @@ import com.onemb.onembwallpapers.services.Wallpaper
 import com.onemb.onembwallpapers.services.Wallpapers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,19 +36,19 @@ interface BitmapSetListener {
 
 class WallpaperViewModel : ViewModel() {
 
-    private val _wallpapers = MutableLiveData<List<Wallpapers>>()
-    val wallpapers: MutableLiveData<List<Wallpapers>> = _wallpapers
+    private val _wallpapers = MutableStateFlow<List<Wallpapers>?>(null)
+    val wallpapers: StateFlow<List<Wallpapers>?> = _wallpapers
 
-    private val _collections = MutableLiveData<MutableList<String>?>()
-    val collections: MutableLiveData<MutableList<String>?> = _collections
+    private val _collections = MutableStateFlow<MutableList<String>?>(null)
+    val collections: StateFlow<MutableList<String>?> = _collections
 
-    private val _selectedCollection = MutableLiveData<List<String>?>()
-    val selectedCollection: MutableLiveData<List<String>?> = _selectedCollection
+    private val _selectedCollection = MutableStateFlow<List<String>?>(null)
+    val selectedCollection: StateFlow<List<String>?> = _selectedCollection
 
     private var wallpaperBitmap: Bitmap? = null
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: Flow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _wallpaperSet = MutableStateFlow(false)
     val wallpaperSet: Flow<Boolean> = _wallpaperSet

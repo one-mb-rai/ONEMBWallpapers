@@ -1,6 +1,5 @@
 package com.onemb.onembwallpapers
 
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -48,7 +47,7 @@ class MainActivity : ComponentActivity() {
                         viewModel.loadLocalJson(app)
                     }
 
-                    val wallpapers = viewModel.wallpapers.observeAsState(initial = null)
+                    val wallpapers = viewModel.wallpapers.collectAsState(initial = null)
 
                     if (wallpapers.value?.isNotEmpty() == true) {
                         LandingNavigation(viewModel, isCategoriesSelected)

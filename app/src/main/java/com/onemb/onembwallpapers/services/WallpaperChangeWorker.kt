@@ -184,8 +184,17 @@ class WallpaperChangeWorker(context: Context, params: WorkerParameters) : Worker
         private const val WORK_NAME = "WallpaperChangeWorker"
 
         const val WORK_TAG = "ONEMB"
+        fun isWallpaperChangeWorkerEnqueuedSync(context: Context): Boolean {
+            val workManager = WorkManager.getInstance(context)
+            return try {
+                val workInfos = workManager.getWorkInfosByTag(WORK_TAG).get()
+                workInfos.any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING }
+            } catch (e: Exception) {
+                false
+            }
+        }
         fun enqueueWallpaperChangeWork(context: Context, changeAt: String) {
-            if(!isWallpaperChangeWorkerEnqueued(context)) {
+            if(!isWallpaperChangeWorkerEnqueuedSync(context)) {
                 val inputData = Data.Builder()
                     .putString("CHANGEAT", changeAt)
                     .build()

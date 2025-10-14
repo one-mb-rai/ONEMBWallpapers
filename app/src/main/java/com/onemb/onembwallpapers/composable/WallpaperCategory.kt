@@ -30,8 +30,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,7 +49,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WallpaperCategory(navController: NavController, viewModel: WallpaperViewModel) {
-    val collectionsState = viewModel.collections.observeAsState()
+    val collectionsState = viewModel.collections.collectAsState(initial = null)
     var selectedCollection by remember { mutableStateOf(emptyList<String>()) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -160,7 +160,7 @@ fun updateCategoryTitleText(text: String): String {
     if (data.contains("_")) {
         data = data.split("_").joinToString(" ")
     }
-    data = data.replaceFirstChar { char -> char.toUpperCase() }
+    data = data.replaceFirstChar { char -> char.uppercaseChar() }
     Log.d("test", data)
     return data
 }

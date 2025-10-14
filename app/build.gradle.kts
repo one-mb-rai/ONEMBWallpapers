@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.onemb.onembwallpapers"
-    compileSdk = 34
+    compileSdk = 35
 
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
@@ -38,17 +38,17 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources {
@@ -77,21 +77,21 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     //noinspection UseTomlInstead
-    implementation ("com.squareup.retrofit2:retrofit:2.10.0")
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")
     //noinspection UseTomlInstead
-    implementation ("com.squareup.retrofit2:converter-gson:2.10.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
     //noinspection UseTomlInstead
-    implementation ("androidx.compose.runtime:runtime-livedata:1.7.6")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.7.0")
     //noinspection UseTomlInstead
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
     //noinspection UseTomlInstead
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
     //noinspection UseTomlInstead
-    implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation("androidx.navigation:navigation-compose:2.8.0")
     //noinspection UseTomlInstead
-    implementation("com.github.yalantis:ucrop:2.2.8-native")
+    implementation("com.github.yalantis:ucrop:2.2.8-native-16kb")
     //noinspection UseTomlInstead
-    implementation("androidx.navigation:navigation-ui-ktx:2.8.5")
+    implementation("androidx.navigation:navigation-ui-ktx:2.8.0")
     //noinspection UseTomlInstead
     implementation("androidx.core:core-splashscreen:1.0.1")
 }

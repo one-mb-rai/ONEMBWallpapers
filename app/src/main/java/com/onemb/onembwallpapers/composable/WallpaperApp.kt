@@ -45,7 +45,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -83,15 +82,20 @@ fun WallpaperApp(
     viewModel: WallpaperViewModel
 ) {
     val context = LocalContext.current
-    val wallpapersState = viewModel.wallpapers.observeAsState()
+    val wallpapersState = viewModel.wallpapers.collectAsState(initial = null)
     val combinedDataList = mutableListOf<Wallpaper>()
     val keys = viewModel.getSelectedCollection(context, context.getString(R.string.app_collection_key))
 
-    for (key in keys) {
-        val index = wallpapersState.value?.indexOfFirst { wallpaperKey ->  wallpaperKey.wallpapers.containsKey(key)}!!
-        val dataForCurrentKey = wallpapersState.value?.get(index)?.wallpapers?.get(key)
-        if (dataForCurrentKey != null) {
-            combinedDataList.addAll(dataForCurrentKey)
+    val currentWallpaperListFromState = wallpapersState.value
+    if (currentWallpaperListFromState != null) {
+        for (key in keys) {
+            val index = currentWallpaperListFromState.indexOfFirst { wallpaperCollection -> wallpaperCollection.wallpapers.containsKey(key) }
+            if (index != -1) { // Check if index is valid
+                val wallpapersForKey = currentWallpaperListFromState[index].wallpapers[key]
+                if (wallpapersForKey != null) {
+                    combinedDataList.addAll(wallpapersForKey)
+                }
+            }
         }
     }
     val navigatedPreview = viewModel.navigatedPreview.collectAsState(initial = false).value
